@@ -2,11 +2,11 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mastermind 4 – רקע גרידיאנט</title>
+  <meta name="viewport"
+        content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <title>משחק ניחוש ספרות</title>
   <style>
     :root {
-      /* רקע גרידיאנט עדין במקום לבן */
       --bg: linear-gradient(135deg, #ece9e6 0%, #c9d6ff 100%);
       --card: #ffffffcc;
       --text: #222222;
@@ -17,7 +17,6 @@
       --correct: #4caf50;
       --misplaced: #ffeb3b;
       --wrong: #e0e0e0;
-
       --tile: min(14vmin,18vw);
       --gap: 2vw;
     }
@@ -34,42 +33,78 @@
       --wrong: #555555;
     }
 
+    /* מניעת pinch‑zoom ו‑double‑tap‑zoom */
+    html, body {
+      touch-action: manipulation;
+      -ms-touch-action: manipulation;
+      margin: 0;
+      min-height: 100vh;
+      overflow-x: hidden;
+      overflow-y: auto;
+    }
     *, *::before, *::after { box-sizing: border-box; margin: 0; }
-    html, body { height: 100%; }
     body {
       display: flex;
       flex-direction: column;
-      height: 100vh;
       background: var(--bg);
       color: var(--text);
       font-family: Arial, sans-serif;
       font-size: clamp(14px,3.6vw,20px);
     }
-    h1 {
-      margin: 2vw 0;
-      text-align: center;
-      font-size: clamp(22px,6vw,32px);
-    }
 
     /* topbar */
     #topbar {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0 4vw 2vw;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 1vw;
+      padding: 1.5vw;
+      width: 100%;
+      overflow-x: hidden;
     }
-    #attempts { font-weight: 700; }
+    #topbar > * {
+      flex: 0 0 auto;
+    }
+    #topbar button {
+      padding: 0.8vw 1.5vw;
+      font-size: clamp(12px,3vw,18px);
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+    #topbar button[disabled] {
+      background: #999;
+      cursor: not-allowed;
+    }
+    #timer, #attempts {
+      font-size: clamp(16px,4vw,24px);
+      font-weight: bold;
+    }
     #controls {
-      display: flex; gap: var(--gap); align-items: center;
+      display: flex;
+      gap: 1vw;
+      margin-left: auto;
     }
     #controls button {
-      background: transparent; border: none; color: var(--text);
-      font-size: 7vw; cursor: pointer; line-height: 1; padding: 0;
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 7vw;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
     }
-    #adminBtn { font-size: 4vw; opacity: 0.6; }
+    #adminBtn { font-size: 4vw; opacity: .6; }
 
-    /* main */
+    /* main ותכולתו */
     #main {
-      flex: 1; display: flex; flex-direction: column;
-      gap: var(--gap); padding: 0 3vw;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      padding: 0 3vw;
     }
     @media (min-width: 768px) {
       #main { flex-direction: row; }
@@ -80,44 +115,52 @@
     }
 
     /* board */
-    #board {
-      display: flex; flex-direction: column; gap: var(--gap);
-    }
+    #board { display: flex; flex-direction: column; gap: var(--gap); }
     #buttons {
-      direction: ltr; display: grid;
-      grid-template-columns: repeat(3,1fr); gap: var(--gap);
+      direction: ltr;
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: var(--gap);
     }
     .num-btn {
-      width: 100%; aspect-ratio: 1/1;
-      font-size: calc(var(--tile) * 0.4);
+      width: 100%;
+      aspect-ratio: 1/1;
+      font-size: calc(var(--tile)*.4);
       font-weight: 600;
-      border: 2px solid var(--border); border-radius: 6px;
-      background: var(--card); cursor: pointer;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      cursor: pointer;
       transition: background .15s, transform .1s;
     }
     .num-btn:hover { background: var(--hover); }
     .num-btn:disabled {
-      background: var(--hover); color: #909090;
-      border-color: var(--borderSoft); cursor: not-allowed;
+      background: var(--hover);
+      color: #909090;
+      border-color: var(--borderSoft);
+      cursor: not-allowed;
     }
-    .num-btn:focus { outline: 3px solid var(--primary); }
-
     #delBtn {
       aspect-ratio: auto;
-      font-size: calc(var(--tile) * 0.4);
+      font-size: calc(var(--tile)*.4);
       padding: 1vw 0;
     }
-
     #current {
-      display: flex; gap: var(--gap); direction: ltr;
+      display: flex;
+      gap: var(--gap);
+      direction: ltr;
       justify-content: space-between;
     }
     .slot {
-      flex: 1; aspect-ratio: 1/1;
-      border: 2px dashed var(--borderSoft); border-radius: 6px;
-      display: flex; align-items: center; justify-content: center;
+      flex: 1;
+      aspect-ratio: 1/1;
+      border: 2px dashed var(--borderSoft);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
       background: var(--card);
-      font-size: calc(var(--tile) * 0.5);
+      font-size: calc(var(--tile)*.5);
       transition: background .2s, transform .3s;
     }
     .slot.filled {
@@ -128,94 +171,98 @@
       from { transform: rotateX(90deg); opacity: 0; }
       to   { transform: rotateX(0); opacity: 1; }
     }
-
     .action-btn {
-      width: 100%; padding: 3vw 0; margin-top: 1vw;
+      width: 100%;
+      padding: 3vw 0;
+      margin-top: 1vw;
       font-size: clamp(16px,5.3vw,24px);
-      border: none; border-radius: 8px; cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
       transition: background .15s, transform .1s;
     }
     .action-btn:active { transform: scale(0.97); }
     #submit { background: var(--primary); color: #fff; }
     #submit:disabled { background: #a8ceff; cursor: not-allowed; }
-    #restart { background: #ff4252; color: #fff; display: none; }
-    #shareBtn { background: #ffaa00; color: #000; display: none; }
 
     /* history */
     #historyWrap {
-      flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 3vw;
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-bottom: 3vw;
     }
     table {
-      width: 100%; border-collapse: collapse;
+      width: 100%;
+      border-collapse: collapse;
     }
     th, td {
-      padding: 1vw; border-bottom: 1px solid var(--borderSoft);
+      padding: 1vw;
+      border-bottom: 1px solid var(--borderSoft);
       text-align: center;
     }
     thead th {
-      background: var(--card); position: sticky; top: 0;
+      background: var(--card);
+      position: sticky;
+      top: 0;
     }
     .cell-correct   { background: var(--correct);   color: #000; }
     .cell-misplaced { background: var(--misplaced); color: #000; }
     .cell-wrong     { background: var(--wrong);     color: #999; }
-    tbody tr { direction: ltr; animation: fade .3s; }
+    tbody tr { animation: fade .3s; }
     @keyframes fade {
       from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* modals & end dialog */
-    .modal {
-      position: fixed; inset: 0; background: rgba(0,0,0,.5);
-      display: flex; align-items: center; justify-content: center;
-      visibility: hidden; opacity: 0;
+    /* modals & overlay */
+    .modal, #overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      visibility: hidden;
+      opacity: 0;
       transition: opacity .2s, visibility .2s;
       z-index: 10;
     }
-    .modal.show { visibility: visible; opacity: 1; }
-    .modal-content {
-      background: var(--card); padding: 4vw; border-radius: 8px;
-      max-width: 90%; text-align: center;
+    .modal.show, #overlay.show {
+      visibility: visible;
+      opacity: 1;
+    }
+    .modal-content, .dialog {
+      background: var(--card);
+      padding: 4vw;
+      border-radius: 8px;
+      max-width: 90%;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.25);
+    }
+    .modal-content button, .dialog button {
+      margin-top: 3vw;
+      padding: 2vw 4vw;
       font-size: clamp(14px,4vw,18px);
-    }
-    .modal-content button {
-      margin-top: 3vw; padding: 2vw 4vw;
-      font-size: clamp(14px,4vw,18px);
-      border: none; border-radius: 6px;
-      background: var(--primary); color: #fff;
-      cursor: pointer;
-    }
-    #overlay {
-      position: fixed; inset: 0; background: rgba(0,0,0,.55);
-      backdrop-filter: blur(3px); display: flex;
-      align-items: center; justify-content: center;
-      visibility: hidden; opacity: 0;
-      transition: opacity .25s, visibility .25s;
-      z-index: 11;
-    }
-    #overlay.show { visibility: visible; opacity: 1; }
-    .dialog {
-      background: var(--card); padding: 6vw 4vw; border-radius: 12px;
-      text-align: center; max-width: 90%;
-      box-shadow: 0 4px 10px rgba(0,0,0,.25);
-    }
-    .dialog button {
-      margin-top: 4vw; padding: 3vw 6vw;
-      font-size: clamp(16px,5vw,22px);
-      border: none; border-radius: 8px;
-      background: var(--primary); color: #fff;
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: #fff;
       cursor: pointer;
     }
   </style>
 </head>
 <body>
-  <h1>משחק ניחוש ספרות</h1>
   <div id="topbar">
+    <button id="startBtn">התחל משחק</button>
+    <button id="pauseBtn" disabled>השהה</button>
+    <button id="resetBtn" disabled>אפס משחק</button>
+    <span id="timer">זמן: 00:00</span>
     <span id="attempts">ניסיונות: 0</span>
     <div id="controls">
-      <button id="statsBtn" title="סטטיסטיקות">📊</button>
-      <button id="helpBtn" title="עזרה">?</button>
-      <button id="themeToggle" title="החלף מצב">🌙</button>
+      <button id="statsBtn">📊</button>
+      <button id="helpBtn">?</button>
+      <button id="themeToggle">🌙</button>
       <button id="adminBtn">Shalev</button>
     </div>
   </div>
@@ -223,26 +270,25 @@
   <div id="main">
     <div id="board">
       <div id="buttons"></div>
-      <button id="delBtn" class="num-btn" title="מחק">⌫</button>
+      <button id="delBtn" class="num-btn">⌫</button>
       <div id="current">
         <div class="slot"></div><div class="slot"></div>
         <div class="slot"></div><div class="slot"></div>
       </div>
       <button id="submit" class="action-btn" disabled>בדיקת ניחוש</button>
-      <button id="restart" class="action-btn">משחק חדש</button>
-      <button id="shareBtn" class="action-btn">שתף תוצאה</button>
     </div>
     <div id="historyWrap">
       <table id="history">
         <thead>
-          <tr><th>#</th><th>ניחוש</th><th>טעינו</th><th>מקום לא נכון</th><th>מקום נכון</th></tr>
+          <tr>
+            <th>#</th><th>ניחוש</th><th>טעינו</th><th>מקום לא נכון</th><th>נכון</th>
+          </tr>
         </thead>
         <tbody></tbody>
       </table>
     </div>
   </div>
 
-  <!-- help modal -->
   <div id="helpModal" class="modal">
     <div class="modal-content">
       <h2>איך לשחק?</h2>
@@ -254,7 +300,6 @@
     </div>
   </div>
 
-  <!-- stats modal -->
   <div id="statsModal" class="modal">
     <div class="modal-content">
       <h2>סטטיסטיקות זמן</h2>
@@ -265,7 +310,6 @@
     </div>
   </div>
 
-  <!-- end dialog -->
   <div id="overlay">
     <div class="dialog">
       <p id="endMsg"></p>
@@ -275,45 +319,33 @@
 
   <script>
   (() => {
-    const POOL=[1,2,3,4,5,6,7,8,9], LEN=4;
-    let secret, guess, tries, startTime;
-    const ADMIN_PW = 'MjUxMg==';
+    const POOL=[1,2,3,4,5,6,7,8,9], LEN=4, ADMIN_PW='MjUxMg==';
+    let secret, guess=[], tries=0, elapsed=0, timerInterval, gameStarted=false;
 
-    const attemptsLbl = document.getElementById('attempts');
-    const btnHolder   = document.getElementById('buttons');
-    const slots       = [...document.querySelectorAll('.slot')];
-    const submitBtn   = document.getElementById('submit');
-    const restartBtn  = document.getElementById('restart');
-    const shareBtn    = document.getElementById('shareBtn');
-    const delBtn      = document.getElementById('delBtn');
-    const tbody       = document.querySelector('#history tbody');
-    const historyWrap = document.getElementById('historyWrap');
-    const overlay     = document.getElementById('overlay');
-    const endMsg      = document.getElementById('endMsg');
-    const againBtn    = document.getElementById('againBtn');
+    const startBtn   = document.getElementById('startBtn');
+    const pauseBtn   = document.getElementById('pauseBtn');
+    const resetBtn   = document.getElementById('resetBtn');
+    const timerLbl   = document.getElementById('timer');
+    const attemptsLbl= document.getElementById('attempts');
+    const btnHolder  = document.getElementById('buttons');
+    const slots      =[...document.querySelectorAll('.slot')];
+    const submitBtn  = document.getElementById('submit');
+    const delBtn     = document.getElementById('delBtn');
+    const tbody      = document.querySelector('#history tbody');
+    const helpBtn    = document.getElementById('helpBtn');
+    const helpModal  = document.getElementById('helpModal');
+    const closeHelp  = document.getElementById('closeHelp');
+    const statsBtn   = document.getElementById('statsBtn');
+    const statsModal = document.getElementById('statsModal');
+    const closeStats = document.getElementById('closeStats');
+    const themeToggle= document.getElementById('themeToggle');
+    const adminBtn   = document.getElementById('adminBtn');
+    const overlay    = document.getElementById('overlay');
+    const endMsg     = document.getElementById('endMsg');
+    const againBtn   = document.getElementById('againBtn');
 
-    const helpBtn     = document.getElementById('helpBtn');
-    const helpModal   = document.getElementById('helpModal');
-    const closeHelp   = document.getElementById('closeHelp');
-
-    const statsBtn    = document.getElementById('statsBtn');
-    const statsModal  = document.getElementById('statsModal');
-    const closeStats  = document.getElementById('closeStats');
-    const statLast    = document.getElementById('statLastTime');
-    const statBest    = document.getElementById('statBestTime');
-    const statAvg     = document.getElementById('statAvgTime');
-
-    const themeToggle = document.getElementById('themeToggle');
-    const adminBtn    = document.getElementById('adminBtn');
-
-    document.addEventListener('contextmenu', e => e.preventDefault());
-    document.addEventListener('keydown', e => {
-      if (e.key==='F12' ||
-          (e.ctrlKey&&e.shiftKey&&['I','C','J'].includes(e.key)) ||
-          (e.ctrlKey&&e.key==='U')) e.preventDefault();
-    });
-
-    const btnMap = {};
+    // צור כפתורי מספר
+    const btnMap={};
     POOL.forEach(n=>{
       const b=document.createElement('button');
       b.textContent=n; b.className='num-btn';
@@ -322,117 +354,107 @@
       btnMap[n]=b;
     });
 
-    delBtn.onclick      = removeDigit;
-    submitBtn.onclick   = evaluate;
-    restartBtn.onclick  = startGame;
-    againBtn.onclick    = ()=>{ overlay.classList.remove('show'); startGame(); };
-    shareBtn.onclick    = shareResult;
-    helpBtn.onclick     = ()=>helpModal.classList.add('show');
-    closeHelp.onclick   = ()=>helpModal.classList.remove('show');
-    statsBtn.onclick    = ()=>{ updateStatsModal(); statsModal.classList.add('show'); };
-    closeStats.onclick  = ()=>statsModal.classList.remove('show');
-    themeToggle.onclick = ()=>document.body.classList.toggle('dark');
-    adminBtn.onclick    = ()=>{
-      const pwd=prompt("הזן סיסמת אדמין:");
-      if(pwd===atob(ADMIN_PW)) alert("הקוד הסודי הוא: "+secret.join(""));
-      else alert("סיסמה שגויה");
+    startBtn.onclick = ()=>{
+      resetGame(); startTimer(); gameStarted=true;
+      startBtn.disabled=true; pauseBtn.disabled=false; resetBtn.disabled=false;
+    };
+    pauseBtn.onclick = ()=>{
+      clearInterval(timerInterval); gameStarted=false;
+      startBtn.disabled=false; pauseBtn.disabled=true;
+    };
+    resetBtn.onclick = ()=>{
+      clearInterval(timerInterval); resetGame();
+      startBtn.disabled=false; pauseBtn.disabled=true; resetBtn.disabled=true; gameStarted=false;
     };
 
-    document.addEventListener('keydown', e=>{
-      if(/^[1-9]$/.test(e.key)) addDigit(+e.key);
-      if(e.key==='Backspace') removeDigit();
-      if(e.key==='Enter') evaluate();
-    });
+    function startTimer(){
+      clearInterval(timerInterval); elapsed=0; updateTimer();
+      timerInterval=setInterval(()=>{
+        elapsed++; updateTimer();
+      },1000);
+    }
+    function updateTimer(){
+      const m=String(Math.floor(elapsed/60)).padStart(2,'0'),
+            s=String(elapsed%60).padStart(2,'0');
+      timerLbl.textContent=`זמן: ${m}:${s}`;
+    }
 
-    startGame();
-
-    function startGame(){
-      secret=[...POOL].sort(()=>Math.random()-0.5).slice(0,LEN);
-      guess=[]; tries=0; startTime=Date.now();
-      attemptsLbl.textContent='ניסיונות: 0';
-      tbody.innerHTML=''; helpModal.classList.remove('show');
-      statsModal.classList.remove('show');
-      slots.forEach(s=>{s.textContent='';s.classList.remove('filled');});
+    function resetGame(){
+      tries=0; attemptsLbl.textContent='ניסיונות: 0';
+      guess=[]; secret=[...POOL].sort(()=>Math.random()-0.5).slice(0,LEN);
+      tbody.innerHTML=''; slots.forEach(s=>{s.textContent='';s.classList.remove('filled');});
       POOL.forEach(n=>btnMap[n].disabled=false);
-      submitBtn.disabled=true;
-      restartBtn.style.display='none';
-      shareBtn.style.display='none';
-      overlay.classList.remove('show');
+      submitBtn.disabled=true; if(overlay) overlay.classList.remove('show');
     }
 
     function addDigit(n){
-      if(guess.length>=LEN||guess.includes(n)) return;
+      if(!gameStarted||guess.includes(n)||guess.length>=LEN) return;
       guess.push(n); btnMap[n].disabled=true;
-      slots[guess.length-1].textContent=n;
-      slots[guess.length-1].classList.add('filled');
+      slots[guess.length-1].textContent=n; slots[guess.length-1].classList.add('filled');
       submitBtn.disabled = guess.length!==LEN;
     }
-
-    function removeDigit(){
-      if(!guess.length) return;
+    delBtn.onclick = ()=>{
+      if(!gameStarted||!guess.length) return;
       const last=guess.pop(); btnMap[last].disabled=false;
-      slots[guess.length].textContent='';
-      slots[guess.length].classList.remove('filled');
+      slots[guess.length].textContent=''; slots[guess.length].classList.remove('filled');
       submitBtn.disabled=true;
-    }
+    };
 
-    function evaluate(){
-      tries++;
-      attemptsLbl.textContent = `ניסיונות: ${tries}`;
-      const duration = Math.round((Date.now()-startTime)/1000);
+    submitBtn.onclick = ()=>{
+      if(!gameStarted) return;
+      tries++; attemptsLbl.textContent=`ניסיונות: ${tries}`;
       const correct = guess.filter((d,i)=>d===secret[i]).length;
       const overlap = guess.filter(d=>secret.includes(d)).length;
-      const wrongC = LEN-overlap, misC = overlap-correct;
-      addRow([guess.join(''), wrongC, misC, correct]);
-      if(correct===LEN){
-        alert(`פתרת ב־${tries} נסיונות וב־${duration} שניות!`);
-        overlay.classList.add('show');
-        restartBtn.style.display='block';
-        shareBtn.style.display='block';
-        submitBtn.disabled=true;
-        const s=JSON.parse(localStorage.getItem('mmStats')||'{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
-        s.games++; s.totalTime+=duration; s.lastTime=duration;
-        s.bestTime = s.bestTime?Math.min(s.bestTime,duration):duration;
-        localStorage.setItem('mmStats',JSON.stringify(s));
-      }
-      resetGuess();
-    }
-
-    function resetGuess(){
-      guess=[]; slots.forEach(s=>{s.textContent='';s.classList.remove('filled');});
-      POOL.forEach(n=>btnMap[n].disabled=false);
+      addRow([guess.join(''), LEN-overlap, overlap-correct, correct]);
+      if(correct===LEN) resetGame();
+      guess=[]; POOL.forEach(n=>btnMap[n].disabled=false);
       submitBtn.disabled=true;
-    }
+    };
 
     function addRow([g,w,m,c]){
       const r=tbody.insertRow();
       r.insertCell().textContent=tbody.rows.length;
       r.insertCell().textContent=g;
-      const cw=r.insertCell();   cw.textContent=w; cw.classList.add('cell-wrong');
-      const cm=r.insertCell();   cm.textContent=m; cm.classList.add('cell-misplaced');
-      const cc=r.insertCell();   cc.textContent=c; cc.classList.add('cell-correct');
-      historyWrap.scrollTop=historyWrap.scrollHeight;
+      const cw=r.insertCell(); cw.textContent=w; cw.classList.add('cell-wrong');
+      const cm=r.insertCell(); cm.textContent=m; cm.classList.add('cell-misplaced');
+      const cc=r.insertCell(); cc.textContent=c; cc.classList.add('cell-correct');
+      document.getElementById('historyWrap').scrollTop=document.getElementById('historyWrap').scrollHeight;
     }
 
-    function shareResult(){}
-
-    function updateStatsModal(){
+    helpBtn.onclick    = ()=>helpModal.classList.add('show');
+    closeHelp.onclick  = ()=>helpModal.classList.remove('show');
+    statsBtn.onclick   = ()=>{
       const s=JSON.parse(localStorage.getItem('mmStats')||'{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
+      s.games++; s.totalTime+=elapsed; s.lastTime=elapsed;
+      s.bestTime = s.bestTime?Math.min(s.bestTime,elapsed):elapsed;
+      localStorage.setItem('mmStats',JSON.stringify(s));
       document.getElementById('statLastTime').textContent=`משחק אחרון: ${formatTime(s.lastTime)}`;
       document.getElementById('statBestTime').textContent=`שיא: ${formatTime(s.bestTime)}`;
       const avg=s.games?Math.round(s.totalTime/s.games):0;
       document.getElementById('statAvgTime').textContent=`ממוצע: ${formatTime(avg)}`;
-    }
+      statsModal.classList.add('show');
+    };
+    closeStats.onclick = ()=>statsModal.classList.remove('show');
+    themeToggle.onclick= ()=>document.body.classList.toggle('dark');
+    adminBtn.onclick   = ()=>{
+      const pwd=prompt("הזן סיסמת אדמין:");
+      if(pwd===atob(ADMIN_PW)) alert("הקוד הסודי הוא: "+secret.join(""));
+      else alert("סיסמה שגויה");
+    };
 
-    function shareResult(){/*—*/}
-
-    function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+    document.addEventListener('keydown',e=>{
+      if(/^[1-9]$/.test(e.key)) addDigit(+e.key);
+      if(e.key==='Backspace') delBtn.onclick();
+      if(e.key==='Enter') submitBtn.onclick();
+    });
 
     function formatTime(sec){
       const m=String(Math.floor(sec/60)).padStart(2,'0'),
             s=String(sec%60).padStart(2,'0');
       return `${m}:${s}`;
     }
+
+    resetGame();
   })();
   </script>
 </body>

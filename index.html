@@ -3,11 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Mastermind 4 – מותאם גם למחשב</title>
+  <title>Mastermind 4 – רקע גרידיאנט</title>
   <style>
     :root {
-      --bg: #f5f7fa;
-      --card: #ffffff;
+      /* רקע גרידיאנט עדין במקום לבן */
+      --bg: linear-gradient(135deg, #ece9e6 0%, #c9d6ff 100%);
+      --card: #ffffffcc;
       --text: #222222;
       --primary: #1e88e5;
       --border: #a0a0a0;
@@ -17,13 +18,12 @@
       --misplaced: #ffeb3b;
       --wrong: #e0e0e0;
 
-      /* ספרות וחריצים קטנים יותר */
       --tile: min(14vmin,18vw);
-      --gap : 2vw;
+      --gap: 2vw;
     }
     body.dark {
-      --bg: #121212;
-      --card: #1e1e1e;
+      --bg: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);
+      --card: #1e1e1ecc;
       --text: #e5e5e5;
       --primary: #64b5f6;
       --border: #555555;
@@ -33,6 +33,7 @@
       --misplaced: #fbc02d;
       --wrong: #555555;
     }
+
     *, *::before, *::after { box-sizing: border-box; margin: 0; }
     html, body { height: 100%; }
     body {
@@ -48,92 +49,73 @@
       margin: 2vw 0;
       text-align: center;
       font-size: clamp(22px,6vw,32px);
-      line-height: 1;
     }
 
-    /* סרגל עליון */
+    /* topbar */
     #topbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      display: flex; justify-content: space-between; align-items: center;
       padding: 0 4vw 2vw;
     }
     #attempts { font-weight: 700; }
     #controls {
-      display: flex;
-      gap: var(--gap);
-      align-items: center;
+      display: flex; gap: var(--gap); align-items: center;
     }
     #controls button {
-      background: transparent;
-      border: none;
-      color: var(--text);
-      font-size: 7vw;
-      cursor: pointer;
-      line-height: 1;
-      padding: 0;
+      background: transparent; border: none; color: var(--text);
+      font-size: 7vw; cursor: pointer; line-height: 1; padding: 0;
     }
     #adminBtn { font-size: 4vw; opacity: 0.6; }
 
-    /* מיכל ראשי: על טלפון column, על מחשב row */
+    /* main */
     #main {
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap);
-      padding: 0 3vw;
+      flex: 1; display: flex; flex-direction: column;
+      gap: var(--gap); padding: 0 3vw;
+    }
+    @media (min-width: 768px) {
+      #main { flex-direction: row; }
+      #board { flex: 0 0 300px; margin-right: 2vw; }
+      #historyWrap { flex: 1; }
+      .num-btn { font-size: 1.5rem; }
+      #controls button { font-size: 2rem; }
     }
 
-    /* לוח המשחק */
+    /* board */
     #board {
-      display: flex;
-      flex-direction: column;
-      gap: var(--gap);
+      display: flex; flex-direction: column; gap: var(--gap);
     }
     #buttons {
-      direction: ltr;
-      display: grid;
-      grid-template-columns: repeat(3,1fr);
-      gap: var(--gap);
+      direction: ltr; display: grid;
+      grid-template-columns: repeat(3,1fr); gap: var(--gap);
     }
     .num-btn {
-      width: 100%;
-      aspect-ratio: 1/1;
+      width: 100%; aspect-ratio: 1/1;
       font-size: calc(var(--tile) * 0.4);
       font-weight: 600;
-      border: 2px solid var(--border);
-      border-radius: 6px;
-      background: var(--card);
-      cursor: pointer;
+      border: 2px solid var(--border); border-radius: 6px;
+      background: var(--card); cursor: pointer;
       transition: background .15s, transform .1s;
     }
     .num-btn:hover { background: var(--hover); }
     .num-btn:disabled {
-      background: var(--hover);
-      color: #909090;
-      border-color: var(--borderSoft);
-      cursor: not-allowed;
+      background: var(--hover); color: #909090;
+      border-color: var(--borderSoft); cursor: not-allowed;
     }
     .num-btn:focus { outline: 3px solid var(--primary); }
+
     #delBtn {
       aspect-ratio: auto;
       font-size: calc(var(--tile) * 0.4);
       padding: 1vw 0;
     }
+
     #current {
-      display: flex;
-      gap: var(--gap);
-      direction: ltr;
+      display: flex; gap: var(--gap); direction: ltr;
       justify-content: space-between;
     }
     .slot {
-      flex: 1;
-      aspect-ratio: 1/1;
-      border: 2px dashed var(--borderSoft);
-      border-radius: 6px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
+      flex: 1; aspect-ratio: 1/1;
+      border: 2px dashed var(--borderSoft); border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
       background: var(--card);
       font-size: calc(var(--tile) * 0.5);
       transition: background .2s, transform .3s;
@@ -144,16 +126,13 @@
     }
     @keyframes flip {
       from { transform: rotateX(90deg); opacity: 0; }
-      to   { transform: rotateX(0);    opacity: 1; }
+      to   { transform: rotateX(0); opacity: 1; }
     }
+
     .action-btn {
-      width: 100%;
-      padding: 3vw 0;
-      margin-top: 1vw;
+      width: 100%; padding: 3vw 0; margin-top: 1vw;
       font-size: clamp(16px,5.3vw,24px);
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
+      border: none; border-radius: 8px; cursor: pointer;
       transition: background .15s, transform .1s;
     }
     .action-btn:active { transform: scale(0.97); }
@@ -162,26 +141,19 @@
     #restart { background: #ff4252; color: #fff; display: none; }
     #shareBtn { background: #ffaa00; color: #000; display: none; }
 
-    /* טבלת היסטוריה */
+    /* history */
     #historyWrap {
-      flex: 1;
-      min-height: 0;
-      overflow-y: auto;
-      padding-bottom: 3vw;
+      flex: 1; min-height: 0; overflow-y: auto; padding-bottom: 3vw;
     }
     table {
-      width: 100%;
-      border-collapse: collapse;
+      width: 100%; border-collapse: collapse;
     }
     th, td {
-      padding: 1vw;
-      border-bottom: 1px solid var(--borderSoft);
+      padding: 1vw; border-bottom: 1px solid var(--borderSoft);
       text-align: center;
     }
     thead th {
-      background: var(--card);
-      position: sticky;
-      top: 0;
+      background: var(--card); position: sticky; top: 0;
     }
     .cell-correct   { background: var(--correct);   color: #000; }
     .cell-misplaced { background: var(--misplaced); color: #000; }
@@ -192,10 +164,9 @@
       to   { opacity: 1; transform: translateY(0); }
     }
 
-    /* מודאלים ודיאלוג סיום */
+    /* modals & end dialog */
     .modal {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.5);
+      position: fixed; inset: 0; background: rgba(0,0,0,.5);
       display: flex; align-items: center; justify-content: center;
       visibility: hidden; opacity: 0;
       transition: opacity .2s, visibility .2s;
@@ -203,70 +174,37 @@
     }
     .modal.show { visibility: visible; opacity: 1; }
     .modal-content {
-      background: var(--card);
-      padding: 4vw;
-      border-radius: 8px;
-      max-width: 90%;
-      text-align: center;
+      background: var(--card); padding: 4vw; border-radius: 8px;
+      max-width: 90%; text-align: center;
       font-size: clamp(14px,4vw,18px);
     }
     .modal-content button {
-      margin-top: 3vw;
-      padding: 2vw 4vw;
+      margin-top: 3vw; padding: 2vw 4vw;
       font-size: clamp(14px,4vw,18px);
-      border: none;
-      border-radius: 6px;
-      background: var(--primary);
-      color: #fff;
+      border: none; border-radius: 6px;
+      background: var(--primary); color: #fff;
       cursor: pointer;
     }
     #overlay {
-      position: fixed; inset: 0;
-      background: rgba(0,0,0,.55);
-      backdrop-filter: blur(3px);
-      display: flex; align-items: center; justify-content: center;
+      position: fixed; inset: 0; background: rgba(0,0,0,.55);
+      backdrop-filter: blur(3px); display: flex;
+      align-items: center; justify-content: center;
       visibility: hidden; opacity: 0;
       transition: opacity .25s, visibility .25s;
       z-index: 11;
     }
     #overlay.show { visibility: visible; opacity: 1; }
     .dialog {
-      background: var(--card);
-      padding: 6vw 4vw;
-      border-radius: 12px;
-      text-align: center;
-      max-width: 90%;
+      background: var(--card); padding: 6vw 4vw; border-radius: 12px;
+      text-align: center; max-width: 90%;
       box-shadow: 0 4px 10px rgba(0,0,0,.25);
     }
     .dialog button {
-      margin-top: 4vw;
-      padding: 3vw 6vw;
+      margin-top: 4vw; padding: 3vw 6vw;
       font-size: clamp(16px,5vw,22px);
-      border: none;
-      border-radius: 8px;
-      background: var(--primary);
-      color: #fff;
+      border: none; border-radius: 8px;
+      background: var(--primary); color: #fff;
       cursor: pointer;
-    }
-
-    /* MEDIA QUERY: על מסכים רחבים יותר (מחשב) */
-    @media (min-width: 768px) {
-      #main {
-        flex-direction: row;
-      }
-      #board {
-        flex: 0 0 300px;
-        margin-right: 2vw;
-      }
-      #historyWrap {
-        flex: 1;
-      }
-      .num-btn {
-        font-size: 1.5rem; /* גודל קבוע יותר על מחשב */
-      }
-      #controls button {
-        font-size: 2rem;
-      }
     }
   </style>
 </head>
@@ -297,10 +235,7 @@
     <div id="historyWrap">
       <table id="history">
         <thead>
-          <tr>
-            <th>#</th><th>ניחוש</th><th>טעינו</th>
-            <th>במקום לא נכון</th><th>במקום הנכון</th>
-          </tr>
+          <tr><th>#</th><th>ניחוש</th><th>טעינו</th><th>מקום לא נכון</th><th>מקום נכון</th></tr>
         </thead>
         <tbody></tbody>
       </table>
@@ -342,9 +277,8 @@
   (() => {
     const POOL=[1,2,3,4,5,6,7,8,9], LEN=4;
     let secret, guess, tries, startTime;
-    const ADMIN_PW='MjUxMg==';
+    const ADMIN_PW = 'MjUxMg==';
 
-    // DOM
     const attemptsLbl = document.getElementById('attempts');
     const btnHolder   = document.getElementById('buttons');
     const slots       = [...document.querySelectorAll('.slot')];
@@ -372,16 +306,14 @@
     const themeToggle = document.getElementById('themeToggle');
     const adminBtn    = document.getElementById('adminBtn');
 
-    // block F12/contextmenu
-    document.addEventListener('contextmenu', e=>e.preventDefault());
-    document.addEventListener('keydown', e=>{
-      if(e.key==='F12'||
-        (e.ctrlKey&&e.shiftKey&&['I','C','J'].includes(e.key))||
-        (e.ctrlKey&&e.key==='U')) e.preventDefault();
+    document.addEventListener('contextmenu', e => e.preventDefault());
+    document.addEventListener('keydown', e => {
+      if (e.key==='F12' ||
+          (e.ctrlKey&&e.shiftKey&&['I','C','J'].includes(e.key)) ||
+          (e.ctrlKey&&e.key==='U')) e.preventDefault();
     });
 
-    // create keypad
-    const btnMap={};
+    const btnMap = {};
     POOL.forEach(n=>{
       const b=document.createElement('button');
       b.textContent=n; b.className='num-btn';
@@ -390,18 +322,17 @@
       btnMap[n]=b;
     });
 
-    // listeners
-    delBtn.onclick       = removeDigit;
-    submitBtn.onclick    = evaluate;
-    restartBtn.onclick   = startGame;
-    againBtn.onclick     = ()=>{overlay.classList.remove('show'); startGame();};
-    shareBtn.onclick     = shareResult;
-    helpBtn.onclick      = ()=>helpModal.classList.add('show');
-    closeHelp.onclick    = ()=>helpModal.classList.remove('show');
-    statsBtn.onclick     = ()=>{updateStatsModal(); statsModal.classList.add('show');};
-    closeStats.onclick   = ()=>statsModal.classList.remove('show');
-    themeToggle.onclick  = ()=>document.body.classList.toggle('dark');
-    adminBtn.onclick     = ()=>{
+    delBtn.onclick      = removeDigit;
+    submitBtn.onclick   = evaluate;
+    restartBtn.onclick  = startGame;
+    againBtn.onclick    = ()=>{ overlay.classList.remove('show'); startGame(); };
+    shareBtn.onclick    = shareResult;
+    helpBtn.onclick     = ()=>helpModal.classList.add('show');
+    closeHelp.onclick   = ()=>helpModal.classList.remove('show');
+    statsBtn.onclick    = ()=>{ updateStatsModal(); statsModal.classList.add('show'); };
+    closeStats.onclick  = ()=>statsModal.classList.remove('show');
+    themeToggle.onclick = ()=>document.body.classList.toggle('dark');
+    adminBtn.onclick    = ()=>{
       const pwd=prompt("הזן סיסמת אדמין:");
       if(pwd===atob(ADMIN_PW)) alert("הקוד הסודי הוא: "+secret.join(""));
       else alert("סיסמה שגויה");
@@ -416,92 +347,92 @@
     startGame();
 
     function startGame(){
-      secret    = shuffle([...POOL]).slice(0,LEN);
-      guess     = []; tries=0; startTime=Date.now();
+      secret=[...POOL].sort(()=>Math.random()-0.5).slice(0,LEN);
+      guess=[]; tries=0; startTime=Date.now();
       attemptsLbl.textContent='ניסיונות: 0';
       tbody.innerHTML=''; helpModal.classList.remove('show');
       statsModal.classList.remove('show');
-      slots.forEach(s=>{s.textContent='';s.classList.remove('filled')});
-      enableAll(); submitBtn.disabled=true;
-      restartBtn.style.display='none'; shareBtn.style.display='none';
+      slots.forEach(s=>{s.textContent='';s.classList.remove('filled');});
+      POOL.forEach(n=>btnMap[n].disabled=false);
+      submitBtn.disabled=true;
+      restartBtn.style.display='none';
+      shareBtn.style.display='none';
       overlay.classList.remove('show');
     }
 
     function addDigit(n){
       if(guess.length>=LEN||guess.includes(n)) return;
       guess.push(n); btnMap[n].disabled=true;
-      const i=guess.length-1;
-      slots[i].textContent=n; slots[i].classList.add('filled');
-      submitBtn.disabled=guess.length!==LEN;
+      slots[guess.length-1].textContent=n;
+      slots[guess.length-1].classList.add('filled');
+      submitBtn.disabled = guess.length!==LEN;
     }
 
     function removeDigit(){
       if(!guess.length) return;
       const last=guess.pop(); btnMap[last].disabled=false;
-      const i=guess.length;
-      slots[i].textContent=''; slots[i].classList.remove('filled');
+      slots[guess.length].textContent='';
+      slots[guess.length].classList.remove('filled');
       submitBtn.disabled=true;
     }
 
     function evaluate(){
-      tries++; attemptsLbl.textContent=`ניסיונות: ${tries}`;
-      const duration=Math.round((Date.now()-startTime)/1000);
-      const correct=guess.filter((d,i)=>d===secret[i]).length;
-      const overlap=guess.filter(d=>secret.includes(d)).length;
-      const wrongC=LEN-overlap, misC=overlap-correct;
-      addRow([guess.join(''),wrongC,misC,correct]);
+      tries++;
+      attemptsLbl.textContent = `ניסיונות: ${tries}`;
+      const duration = Math.round((Date.now()-startTime)/1000);
+      const correct = guess.filter((d,i)=>d===secret[i]).length;
+      const overlap = guess.filter(d=>secret.includes(d)).length;
+      const wrongC = LEN-overlap, misC = overlap-correct;
+      addRow([guess.join(''), wrongC, misC, correct]);
       if(correct===LEN){
         alert(`פתרת ב־${tries} נסיונות וב־${duration} שניות!`);
         overlay.classList.add('show');
-        restartBtn.style.display='block'; shareBtn.style.display='block';
-        submitBtn.disabled=true; updateStats(duration);
+        restartBtn.style.display='block';
+        shareBtn.style.display='block';
+        submitBtn.disabled=true;
+        const s=JSON.parse(localStorage.getItem('mmStats')||'{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
+        s.games++; s.totalTime+=duration; s.lastTime=duration;
+        s.bestTime = s.bestTime?Math.min(s.bestTime,duration):duration;
+        localStorage.setItem('mmStats',JSON.stringify(s));
       }
       resetGuess();
     }
 
     function resetGuess(){
-      guess=[]; slots.forEach(s=>{s.textContent='';s.classList.remove('filled')});
-      enableAll(); submitBtn.disabled=true;
-    }
-
-    function enableAll(){
+      guess=[]; slots.forEach(s=>{s.textContent='';s.classList.remove('filled');});
       POOL.forEach(n=>btnMap[n].disabled=false);
+      submitBtn.disabled=true;
     }
 
-    function addRow(vals){
+    function addRow([g,w,m,c]){
       const r=tbody.insertRow();
       r.insertCell().textContent=tbody.rows.length;
-      const [g,w,m,c]=vals;
       r.insertCell().textContent=g;
-      const cw=r.insertCell(); cw.textContent=w; cw.classList.add('cell-wrong');
-      const cm=r.insertCell(); cm.textContent=m; cm.classList.add('cell-misplaced');
-      const cc=r.insertCell(); cc.textContent=c; cc.classList.add('cell-correct');
+      const cw=r.insertCell();   cw.textContent=w; cw.classList.add('cell-wrong');
+      const cm=r.insertCell();   cm.textContent=m; cm.classList.add('cell-misplaced');
+      const cc=r.insertCell();   cc.textContent=c; cc.classList.add('cell-correct');
       historyWrap.scrollTop=historyWrap.scrollHeight;
     }
 
-    function shareResult(){/* optional */}
-    function loadStats(){
-      return JSON.parse(localStorage.getItem('mmStats')||
-        '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
-    }
-    function saveStats(s){localStorage.setItem('mmStats',JSON.stringify(s));}
-    function updateStats(d){
-      const s=loadStats();
-      s.games=(s.games||0)+1;
-      s.totalTime=(s.totalTime||0)+d;
-      s.lastTime=d;
-      s.bestTime=s.bestTime?Math.min(s.bestTime,d):d;
-      saveStats(s);
-    }
+    function shareResult(){}
+
     function updateStatsModal(){
-      const s=loadStats();
+      const s=JSON.parse(localStorage.getItem('mmStats')||'{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
       document.getElementById('statLastTime').textContent=`משחק אחרון: ${formatTime(s.lastTime)}`;
       document.getElementById('statBestTime').textContent=`שיא: ${formatTime(s.bestTime)}`;
       const avg=s.games?Math.round(s.totalTime/s.games):0;
       document.getElementById('statAvgTime').textContent=`ממוצע: ${formatTime(avg)}`;
     }
-    function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-    function formatTime(sec){const m=String(Math.floor(sec/60)).padStart(2,'0'),s=String(sec%60).padStart(2,'0');return`${m}:${s}`;}
+
+    function shareResult(){/*—*/}
+
+    function shuffle(a){return a.sort(()=>Math.random()-0.5);}
+
+    function formatTime(sec){
+      const m=String(Math.floor(sec/60)).padStart(2,'0'),
+            s=String(sec%60).padStart(2,'0');
+      return `${m}:${s}`;
+    }
   })();
   </script>
 </body>

@@ -2,154 +2,271 @@
 <html lang="he" dir="rtl">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width,initial-scale=1" />
-  <title>Mastermind 4 – עם כפתור אדמין</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Mastermind 4 – מותאם גם למחשב</title>
   <style>
     :root {
-      --bg:#f5f7fa; --card:#fff; --text:#222;
-      --primary:#1e88e5; --border:#a0a0a0; --borderSoft:#d0d0d0; --hover:#e9eef5;
-      --tile:min(18vmin,20vw);
+      --bg: #f5f7fa;
+      --card: #ffffff;
+      --text: #222222;
+      --primary: #1e88e5;
+      --border: #a0a0a0;
+      --borderSoft: #d0d0d0;
+      --hover: #e9eef5;
+      --correct: #4caf50;
+      --misplaced: #ffeb3b;
+      --wrong: #e0e0e0;
+
+      /* ספרות וחריצים קטנים יותר */
+      --tile: min(14vmin,18vw);
+      --gap : 2vw;
     }
     body.dark {
-      --bg:#121212; --card:#1e1e1e; --text:#e5e5e5;
-      --primary:#64b5f6; --border:#555; --borderSoft:#444; --hover:#2a2a2a;
+      --bg: #121212;
+      --card: #1e1e1e;
+      --text: #e5e5e5;
+      --primary: #64b5f6;
+      --border: #555555;
+      --borderSoft: #444444;
+      --hover: #2a2a2a;
+      --correct: #388e3c;
+      --misplaced: #fbc02d;
+      --wrong: #555555;
     }
-    *,*::before,*::after{box-sizing:border-box;margin:0}
-    html,body{height:100%}
-    body{
-      display:flex;flex-direction:column;height:100vh;
-      background:var(--bg);color:var(--text);
-      font-family:Arial,sans-serif;
-      font-size:clamp(14px,3.6vw,20px);
+    *, *::before, *::after { box-sizing: border-box; margin: 0; }
+    html, body { height: 100%; }
+    body {
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      background: var(--bg);
+      color: var(--text);
+      font-family: Arial, sans-serif;
+      font-size: clamp(14px,3.6vw,20px);
     }
-    h1{
-      margin:2vw 0;text-align:center;
-      font-size:clamp(22px,6vw,32px);line-height:1;
-    }
-    #topbar{
-      display:flex;justify-content:space-between;align-items:center;
-      padding:0 4vw 2vw;
-    }
-    #attempts{font-weight:700}
-    #controls{display:flex;gap:2vw;align-items:center}
-    #controls button{
-      background:transparent;border:none;color:var(--text);
-      font-size:7vw;cursor:pointer;line-height:1;padding:0;
-    }
-    #adminBtn{font-size:4vw;opacity:0.6}
-
-    #main{
-      flex:1;display:flex;flex-direction:column;
-      gap:2vw;padding:0 3vw;
-    }
-    #board{display:flex;flex-direction:column;gap:2vw}
-    #buttons{
-      direction:ltr;display:grid;
-      grid-template-columns:repeat(3,1fr);gap:3vw;
-    }
-    .num-btn{
-      width:100%;aspect-ratio:1/1;
-      font-size:calc(var(--tile)*0.5);font-weight:600;
-      border:2px solid var(--border);border-radius:6px;
-      background:var(--card);cursor:pointer;
-      transition:transform .1s,background .15s;
-    }
-    .num-btn:hover{background:var(--hover)}
-    .num-btn:disabled{
-      background:var(--hover);color:#909090;
-      border-color:var(--borderSoft);cursor:not-allowed;
-    }
-    #delBtn{aspect-ratio:auto;font-size:calc(var(--tile)*0.4);padding:1vw 0}
-    #current{
-      display:flex;gap:3vw;direction:ltr;
-      justify-content:space-between;
-    }
-    .slot{
-      flex:1;aspect-ratio:1/1;
-      border:2px dashed var(--borderSoft);border-radius:6px;
-      display:flex;align-items:center;justify-content:center;
-      background:var(--card);
-      font-size:calc(var(--tile)*0.5);
-      transition:background .2s,transform .3s;
-    }
-    .slot.filled{
-      background:var(--hover);
-      animation:flip .3s ease-out;
-    }
-    @keyframes flip{
-      from{transform:rotateX(90deg);opacity:0}
-      to{transform:rotateX(0);opacity:1}
-    }
-    .action-btn{
-      width:100%;padding:3vw 0;margin-top:1vw;
-      font-size:clamp(16px,5.3vw,24px);
-      border:none;border-radius:8px;cursor:pointer;
-      transition:background .15s,transform .1s;
-    }
-    .action-btn:active{transform:scale(0.97)}
-    #submit{background:var(--primary);color:#fff}
-    #submit:disabled{background:#a8ceff;cursor:not-allowed}
-    #restart{background:#ff4252;color:#fff;display:none}
-    #shareBtn{background:#ffaa00;color:#000;display:none}
-
-    #historyWrap{
-      flex:1;min-height:0;overflow-y:auto;padding-bottom:3vw;
-    }
-    table{width:100%;border-collapse:collapse}
-    th,td{
-      padding:1vw;border-bottom:1px solid var(--borderSoft);
-      text-align:center;
-    }
-    thead th{
-      background:var(--card);position:sticky;top:0;
-    }
-    .cell-correct{background:#4caf50;color:#000}
-    .cell-misplaced{background:#ffeb3b;color:#000}
-    .cell-wrong{background:#e0e0e0;color:#999}
-    tbody tr{direction:ltr;animation:fade .3s}
-    @keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-    .modal{position:fixed;inset:0;
-      background:rgba(0,0,0,.5);
-      display:flex;align-items:center;justify-content:center;
-      visibility:hidden;opacity:0;
-      transition:opacity .2s,visibility .2s;
-      z-index:10;
-    }
-    .modal.show{visibility:visible;opacity:1}
-    .modal-content{
-      background:var(--card);padding:4vw;border-radius:8px;
-      max-width:90%;text-align:center;
-      font-size:clamp(14px,4vw,18px);
-    }
-    .modal-content button{
-      margin-top:3vw;padding:2vw 4vw;
-      font-size:clamp(14px,4vw,18px);
-      border:none;border-radius:6px;
-      background:var(--primary);color:#fff;
-      cursor:pointer;
+    h1 {
+      margin: 2vw 0;
+      text-align: center;
+      font-size: clamp(22px,6vw,32px);
+      line-height: 1;
     }
 
-    #overlay{
-      position:fixed;inset:0;background:rgba(0,0,0,.55);
-      backdrop-filter:blur(3px);display:flex;
-      align-items:center;justify-content:center;
-      visibility:hidden;opacity:0;
-      transition:opacity .25s,visibility .25s;
-      z-index:11;
+    /* סרגל עליון */
+    #topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0 4vw 2vw;
     }
-    #overlay.show{visibility:visible;opacity:1}
-    .dialog{
-      background:var(--card);padding:6vw 4vw;border-radius:12px;
-      text-align:center;max-width:90%;
-      box-shadow:0 4px 10px rgba(0,0,0,.25);
+    #attempts { font-weight: 700; }
+    #controls {
+      display: flex;
+      gap: var(--gap);
+      align-items: center;
     }
-    .dialog button{
-      margin-top:4vw;padding:3vw 6vw;
-      font-size:clamp(16px,5vw,22px);
-      border:none;border-radius:8px;
-      background:var(--primary);color:#fff;
-      cursor:pointer;
+    #controls button {
+      background: transparent;
+      border: none;
+      color: var(--text);
+      font-size: 7vw;
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+    }
+    #adminBtn { font-size: 4vw; opacity: 0.6; }
+
+    /* מיכל ראשי: על טלפון column, על מחשב row */
+    #main {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      padding: 0 3vw;
+    }
+
+    /* לוח המשחק */
+    #board {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+    }
+    #buttons {
+      direction: ltr;
+      display: grid;
+      grid-template-columns: repeat(3,1fr);
+      gap: var(--gap);
+    }
+    .num-btn {
+      width: 100%;
+      aspect-ratio: 1/1;
+      font-size: calc(var(--tile) * 0.4);
+      font-weight: 600;
+      border: 2px solid var(--border);
+      border-radius: 6px;
+      background: var(--card);
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+    .num-btn:hover { background: var(--hover); }
+    .num-btn:disabled {
+      background: var(--hover);
+      color: #909090;
+      border-color: var(--borderSoft);
+      cursor: not-allowed;
+    }
+    .num-btn:focus { outline: 3px solid var(--primary); }
+    #delBtn {
+      aspect-ratio: auto;
+      font-size: calc(var(--tile) * 0.4);
+      padding: 1vw 0;
+    }
+    #current {
+      display: flex;
+      gap: var(--gap);
+      direction: ltr;
+      justify-content: space-between;
+    }
+    .slot {
+      flex: 1;
+      aspect-ratio: 1/1;
+      border: 2px dashed var(--borderSoft);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: var(--card);
+      font-size: calc(var(--tile) * 0.5);
+      transition: background .2s, transform .3s;
+    }
+    .slot.filled {
+      background: var(--hover);
+      animation: flip .3s ease-out;
+    }
+    @keyframes flip {
+      from { transform: rotateX(90deg); opacity: 0; }
+      to   { transform: rotateX(0);    opacity: 1; }
+    }
+    .action-btn {
+      width: 100%;
+      padding: 3vw 0;
+      margin-top: 1vw;
+      font-size: clamp(16px,5.3vw,24px);
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: background .15s, transform .1s;
+    }
+    .action-btn:active { transform: scale(0.97); }
+    #submit { background: var(--primary); color: #fff; }
+    #submit:disabled { background: #a8ceff; cursor: not-allowed; }
+    #restart { background: #ff4252; color: #fff; display: none; }
+    #shareBtn { background: #ffaa00; color: #000; display: none; }
+
+    /* טבלת היסטוריה */
+    #historyWrap {
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
+      padding-bottom: 3vw;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+    th, td {
+      padding: 1vw;
+      border-bottom: 1px solid var(--borderSoft);
+      text-align: center;
+    }
+    thead th {
+      background: var(--card);
+      position: sticky;
+      top: 0;
+    }
+    .cell-correct   { background: var(--correct);   color: #000; }
+    .cell-misplaced { background: var(--misplaced); color: #000; }
+    .cell-wrong     { background: var(--wrong);     color: #999; }
+    tbody tr { direction: ltr; animation: fade .3s; }
+    @keyframes fade {
+      from { opacity: 0; transform: translateY(6px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* מודאלים ודיאלוג סיום */
+    .modal {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.5);
+      display: flex; align-items: center; justify-content: center;
+      visibility: hidden; opacity: 0;
+      transition: opacity .2s, visibility .2s;
+      z-index: 10;
+    }
+    .modal.show { visibility: visible; opacity: 1; }
+    .modal-content {
+      background: var(--card);
+      padding: 4vw;
+      border-radius: 8px;
+      max-width: 90%;
+      text-align: center;
+      font-size: clamp(14px,4vw,18px);
+    }
+    .modal-content button {
+      margin-top: 3vw;
+      padding: 2vw 4vw;
+      font-size: clamp(14px,4vw,18px);
+      border: none;
+      border-radius: 6px;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+    #overlay {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,.55);
+      backdrop-filter: blur(3px);
+      display: flex; align-items: center; justify-content: center;
+      visibility: hidden; opacity: 0;
+      transition: opacity .25s, visibility .25s;
+      z-index: 11;
+    }
+    #overlay.show { visibility: visible; opacity: 1; }
+    .dialog {
+      background: var(--card);
+      padding: 6vw 4vw;
+      border-radius: 12px;
+      text-align: center;
+      max-width: 90%;
+      box-shadow: 0 4px 10px rgba(0,0,0,.25);
+    }
+    .dialog button {
+      margin-top: 4vw;
+      padding: 3vw 6vw;
+      font-size: clamp(16px,5vw,22px);
+      border: none;
+      border-radius: 8px;
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+    }
+
+    /* MEDIA QUERY: על מסכים רחבים יותר (מחשב) */
+    @media (min-width: 768px) {
+      #main {
+        flex-direction: row;
+      }
+      #board {
+        flex: 0 0 300px;
+        margin-right: 2vw;
+      }
+      #historyWrap {
+        flex: 1;
+      }
+      .num-btn {
+        font-size: 1.5rem; /* גודל קבוע יותר על מחשב */
+      }
+      #controls button {
+        font-size: 2rem;
+      }
     }
   </style>
 </head>
@@ -159,7 +276,7 @@
     <span id="attempts">ניסיונות: 0</span>
     <div id="controls">
       <button id="statsBtn" title="סטטיסטיקות">📊</button>
-      <button id="helpBtn"  title="עזרה">?</button>
+      <button id="helpBtn" title="עזרה">?</button>
       <button id="themeToggle" title="החלף מצב">🌙</button>
       <button id="adminBtn">Shalev</button>
     </div>
@@ -181,7 +298,8 @@
       <table id="history">
         <thead>
           <tr>
-            <th>#</th><th>ניחוש</th><th>טעינו</th><th>במקום לא נכון</th><th>במקום הנכון</th>
+            <th>#</th><th>ניחוש</th><th>טעינו</th>
+            <th>במקום לא נכון</th><th>במקום הנכון</th>
           </tr>
         </thead>
         <tbody></tbody>
@@ -189,6 +307,7 @@
     </div>
   </div>
 
+  <!-- help modal -->
   <div id="helpModal" class="modal">
     <div class="modal-content">
       <h2>איך לשחק?</h2>
@@ -200,6 +319,7 @@
     </div>
   </div>
 
+  <!-- stats modal -->
   <div id="statsModal" class="modal">
     <div class="modal-content">
       <h2>סטטיסטיקות זמן</h2>
@@ -210,6 +330,7 @@
     </div>
   </div>
 
+  <!-- end dialog -->
   <div id="overlay">
     <div class="dialog">
       <p id="endMsg"></p>
@@ -221,11 +342,9 @@
   (() => {
     const POOL=[1,2,3,4,5,6,7,8,9], LEN=4;
     let secret, guess, tries, startTime;
+    const ADMIN_PW='MjUxMg==';
 
-    // Admin password (Base64)
-    const ADMIN_PW = 'MjUxMg=='; // atob -> "2512"
-
-    // Elements
+    // DOM
     const attemptsLbl = document.getElementById('attempts');
     const btnHolder   = document.getElementById('buttons');
     const slots       = [...document.querySelectorAll('.slot')];
@@ -253,7 +372,7 @@
     const themeToggle = document.getElementById('themeToggle');
     const adminBtn    = document.getElementById('adminBtn');
 
-    // Prevent F12 / context menu
+    // block F12/contextmenu
     document.addEventListener('contextmenu', e=>e.preventDefault());
     document.addEventListener('keydown', e=>{
       if(e.key==='F12'||
@@ -261,7 +380,7 @@
         (e.ctrlKey&&e.key==='U')) e.preventDefault();
     });
 
-    // Build number buttons
+    // create keypad
     const btnMap={};
     POOL.forEach(n=>{
       const b=document.createElement('button');
@@ -271,28 +390,23 @@
       btnMap[n]=b;
     });
 
-    delBtn.onclick      = removeDigit;
-    submitBtn.onclick   = evaluate;
-    restartBtn.onclick  = startGame;
-    againBtn.onclick    = ()=>{overlay.classList.remove('show'); startGame();};
-    shareBtn.onclick    = shareResult;
-    helpBtn.onclick     = ()=>helpModal.classList.add('show');
-    closeHelp.onclick   = ()=>helpModal.classList.remove('show');
-    statsBtn.onclick    = ()=>{ updateStatsModal(); statsModal.classList.add('show'); };
-    closeStats.onclick  = ()=>statsModal.classList.remove('show');
-    themeToggle.onclick = ()=>document.body.classList.toggle('dark');
-
-    // Admin button prompts for password, then shows secret via alert
-    adminBtn.onclick = () => {
-      const pwd = prompt("הזן סיסמת אדמין:");
-      if (pwd === atob(ADMIN_PW)) {
-        alert("הקוד הסודי הוא: " + secret.join(""));
-      } else {
-        alert("סיסמה שגויה");
-      }
+    // listeners
+    delBtn.onclick       = removeDigit;
+    submitBtn.onclick    = evaluate;
+    restartBtn.onclick   = startGame;
+    againBtn.onclick     = ()=>{overlay.classList.remove('show'); startGame();};
+    shareBtn.onclick     = shareResult;
+    helpBtn.onclick      = ()=>helpModal.classList.add('show');
+    closeHelp.onclick    = ()=>helpModal.classList.remove('show');
+    statsBtn.onclick     = ()=>{updateStatsModal(); statsModal.classList.add('show');};
+    closeStats.onclick   = ()=>statsModal.classList.remove('show');
+    themeToggle.onclick  = ()=>document.body.classList.toggle('dark');
+    adminBtn.onclick     = ()=>{
+      const pwd=prompt("הזן סיסמת אדמין:");
+      if(pwd===atob(ADMIN_PW)) alert("הקוד הסודי הוא: "+secret.join(""));
+      else alert("סיסמה שגויה");
     };
 
-    // Keyboard support
     document.addEventListener('keydown', e=>{
       if(/^[1-9]$/.test(e.key)) addDigit(+e.key);
       if(e.key==='Backspace') removeDigit();
@@ -318,7 +432,7 @@
       guess.push(n); btnMap[n].disabled=true;
       const i=guess.length-1;
       slots[i].textContent=n; slots[i].classList.add('filled');
-      submitBtn.disabled = guess.length!==LEN;
+      submitBtn.disabled=guess.length!==LEN;
     }
 
     function removeDigit(){
@@ -331,81 +445,63 @@
 
     function evaluate(){
       tries++; attemptsLbl.textContent=`ניסיונות: ${tries}`;
-      const duration = Math.round((Date.now()-startTime)/1000);
-
-      const correct = guess.filter((d,i)=>d===secret[i]).length;
-      const overlap = guess.filter(d=>secret.includes(d)).length;
+      const duration=Math.round((Date.now()-startTime)/1000);
+      const correct=guess.filter((d,i)=>d===secret[i]).length;
+      const overlap=guess.filter(d=>secret.includes(d)).length;
       const wrongC=LEN-overlap, misC=overlap-correct;
-
       addRow([guess.join(''),wrongC,misC,correct]);
-
       if(correct===LEN){
-        alert(`כל הכבוד! פתרת ב־${tries} ניסיונות וב־${duration} שניות.`);
+        alert(`פתרת ב־${tries} נסיונות וב־${duration} שניות!`);
         overlay.classList.add('show');
-        restartBtn.style.display='block';
-        shareBtn.style.display='block';
-        submitBtn.disabled=true;
-        updateStats(duration);
+        restartBtn.style.display='block'; shareBtn.style.display='block';
+        submitBtn.disabled=true; updateStats(duration);
       }
       resetGuess();
     }
 
     function resetGuess(){
-      guess=[];
-      slots.forEach(s=>{s.textContent='';s.classList.remove('filled')});
+      guess=[]; slots.forEach(s=>{s.textContent='';s.classList.remove('filled')});
       enableAll(); submitBtn.disabled=true;
     }
 
-    function enableAll(){ POOL.forEach(n=>btnMap[n].disabled=false) }
+    function enableAll(){
+      POOL.forEach(n=>btnMap[n].disabled=false);
+    }
 
     function addRow(vals){
       const r=tbody.insertRow();
       r.insertCell().textContent=tbody.rows.length;
-      const [g,w,m,c] = vals;
+      const [g,w,m,c]=vals;
       r.insertCell().textContent=g;
-      const cw=r.insertCell();cw.textContent=w;cw.classList.add('cell-wrong');
-      const cm=r.insertCell();cm.textContent=m;cm.classList.add('cell-misplaced');
-      const cc=r.insertCell();cc.textContent=c;cc.classList.add('cell-correct');
-      historyWrap.scrollTop = historyWrap.scrollHeight;
+      const cw=r.insertCell(); cw.textContent=w; cw.classList.add('cell-wrong');
+      const cm=r.insertCell(); cm.textContent=m; cm.classList.add('cell-misplaced');
+      const cc=r.insertCell(); cc.textContent=c; cc.classList.add('cell-correct');
+      historyWrap.scrollTop=historyWrap.scrollHeight;
     }
 
-    // Stats
+    function shareResult(){/* optional */}
     function loadStats(){
       return JSON.parse(localStorage.getItem('mmStats')||
         '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
     }
-    function saveStats(s){ localStorage.setItem('mmStats',JSON.stringify(s)); }
+    function saveStats(s){localStorage.setItem('mmStats',JSON.stringify(s));}
+    function updateStats(d){
+      const s=loadStats();
+      s.games=(s.games||0)+1;
+      s.totalTime=(s.totalTime||0)+d;
+      s.lastTime=d;
+      s.bestTime=s.bestTime?Math.min(s.bestTime,d):d;
+      saveStats(s);
+    }
     function updateStatsModal(){
       const s=loadStats();
       document.getElementById('statLastTime').textContent=`משחק אחרון: ${formatTime(s.lastTime)}`;
       document.getElementById('statBestTime').textContent=`שיא: ${formatTime(s.bestTime)}`;
-      const avg = s.games?Math.round(s.totalTime/s.games):0;
+      const avg=s.games?Math.round(s.totalTime/s.games):0;
       document.getElementById('statAvgTime').textContent=`ממוצע: ${formatTime(avg)}`;
     }
-    function updateStats(duration){
-      const s=loadStats();
-      s.games      = (s.games||0)+1;
-      s.totalTime  = (s.totalTime||0)+duration;
-      s.lastTime   = duration;
-      s.bestTime   = s.bestTime?Math.min(s.bestTime,duration):duration;
-      saveStats(s);
-    }
-
-    function shareResult(){
-      // ...
-    }
-    function shuffle(a){
-      for(let i=a.length-1;i>0;i--){
-        const j=Math.floor(Math.random()*(i+1));
-        [a[i],a[j]]=[a[j],a[i]];
-      }
-      return a;
-    }
-    function formatTime(sec){
-      const m=String(Math.floor(sec/60)).padStart(2,'0'),
-            s=String(sec%60).padStart(2,'0');
-      return `${m}:${s}`;
-    }
+    function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+    function formatTime(sec){const m=String(Math.floor(sec/60)).padStart(2,'0'),s=String(sec%60).padStart(2,'0');return`${m}:${s}`;}
   })();
   </script>
 </body>

@@ -5,6 +5,8 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>משחק ניחוש ספרות</title>
+
+  <!-- ====== עיצוב ====== -->
   <style>
     :root {
       --bg: linear-gradient(135deg, #ece9e6 0%, #c9d6ff 100%);
@@ -33,7 +35,7 @@
       --wrong: #555555;
     }
 
-    /* מניעת pinch‑zoom ו‑double‑tap‑zoom */
+    /* מניעת pinch-zoom ו-double-tap-zoom */
     html, body {
       touch-action: manipulation;
       -ms-touch-action: manipulation;
@@ -62,9 +64,7 @@
       width: 100%;
       overflow-x: hidden;
     }
-    #topbar > * {
-      flex: 0 0 auto;
-    }
+    #topbar > * { flex: 0 0 auto; }
     #topbar button {
       padding: 0.8vw 1.5vw;
       font-size: clamp(12px,3vw,18px);
@@ -192,10 +192,7 @@
       overflow-y: auto;
       padding-bottom: 3vw;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-    }
+    table { width: 100%; border-collapse: collapse; }
     th, td {
       padding: 1vw;
       border-bottom: 1px solid var(--borderSoft);
@@ -252,13 +249,15 @@
     }
   </style>
 </head>
+
 <body>
+  <!-- ====== Top Bar ====== -->
   <div id="topbar">
     <button id="startBtn">התחל משחק</button>
     <button id="pauseBtn" disabled>השהה</button>
     <button id="resetBtn" disabled>אפס משחק</button>
     <span id="timer">זמן: 00:00</span>
-    <span id="attempts">ניסיונות: 0</span>
+    <span id="attempts">ניסיונות: 0</span>
     <div id="controls">
       <button id="statsBtn">📊</button>
       <button id="helpBtn">?</button>
@@ -267,7 +266,9 @@
     </div>
   </div>
 
+  <!-- ====== Main Area ====== -->
   <div id="main">
+    <!-- לוח המשחק -->
     <div id="board">
       <div id="buttons"></div>
       <button id="delBtn" class="num-btn">⌫</button>
@@ -277,6 +278,8 @@
       </div>
       <button id="submit" class="action-btn" disabled>בדיקת ניחוש</button>
     </div>
+
+    <!-- היסטוריה -->
     <div id="historyWrap">
       <table id="history">
         <thead>
@@ -289,6 +292,7 @@
     </div>
   </div>
 
+  <!-- ====== Modals ====== -->
   <div id="helpModal" class="modal">
     <div class="modal-content">
       <h2>איך לשחק?</h2>
@@ -310,150 +314,281 @@
     </div>
   </div>
 
+  <!-- ====== End-Game Dialog ====== -->
   <div id="overlay">
     <div class="dialog">
       <p id="endMsg"></p>
       <button id="againBtn">משחק חדש</button>
+      <button id="shareBtn" hidden>שיתוף</button>
     </div>
   </div>
 
+  <!-- ====== Logic ====== -->
   <script>
   (() => {
-    const POOL=[1,2,3,4,5,6,7,8,9], LEN=4, ADMIN_PW='MjUxMg==';
-    let secret, guess=[], tries=0, elapsed=0, timerInterval, gameStarted=false;
+    /* ---------- קבועים ---------- */
+    const POOL = [1,2,3,4,5,6,7,8,9];
+    const LEN  = 4;
+    const ADMIN_PW = 'MjUxMg==';   // "2512" ב-base64
 
-    const startBtn   = document.getElementById('startBtn');
-    const pauseBtn   = document.getElementById('pauseBtn');
-    const resetBtn   = document.getElementById('resetBtn');
-    const timerLbl   = document.getElementById('timer');
-    const attemptsLbl= document.getElementById('attempts');
-    const btnHolder  = document.getElementById('buttons');
-    const slots      =[...document.querySelectorAll('.slot')];
-    const submitBtn  = document.getElementById('submit');
-    const delBtn     = document.getElementById('delBtn');
-    const tbody      = document.querySelector('#history tbody');
-    const helpBtn    = document.getElementById('helpBtn');
-    const helpModal  = document.getElementById('helpModal');
-    const closeHelp  = document.getElementById('closeHelp');
-    const statsBtn   = document.getElementById('statsBtn');
-    const statsModal = document.getElementById('statsModal');
-    const closeStats = document.getElementById('closeStats');
-    const themeToggle= document.getElementById('themeToggle');
-    const adminBtn   = document.getElementById('adminBtn');
-    const overlay    = document.getElementById('overlay');
-    const endMsg     = document.getElementById('endMsg');
-    const againBtn   = document.getElementById('againBtn');
+    /* ---------- מצב משחק ---------- */
+    let secret = [], guess = [], tries = 0;
+    let elapsed = 0, timerInterval;
+    let gameStarted = false;
+    let shareMsg = '';             // טקסט לשיתוף
 
-    // צור כפתורי מספר
-    const btnMap={};
-    POOL.forEach(n=>{
-      const b=document.createElement('button');
-      b.textContent=n; b.className='num-btn';
-      b.onclick=()=>addDigit(n);
+    /* ---------- אלמנטים ---------- */
+    const startBtn    = document.getElementById('startBtn');
+    const pauseBtn    = document.getElementById('pauseBtn');
+    const resetBtn    = document.getElementById('resetBtn');
+    const timerLbl    = document.getElementById('timer');
+    const attemptsLbl = document.getElementById('attempts');
+
+    const btnHolder   = document.getElementById('buttons');
+    const slots       = [...document.querySelectorAll('.slot')];
+    const submitBtn   = document.getElementById('submit');
+    const delBtn      = document.getElementById('delBtn');
+
+    const tbody       = document.querySelector('#history tbody');
+    const helpBtn     = document.getElementById('helpBtn');
+    const helpModal   = document.getElementById('helpModal');
+    const closeHelp   = document.getElementById('closeHelp');
+    const statsBtn    = document.getElementById('statsBtn');
+    const statsModal  = document.getElementById('statsModal');
+    const closeStats  = document.getElementById('closeStats');
+    const themeToggle = document.getElementById('themeToggle');
+    const adminBtn    = document.getElementById('adminBtn');
+
+    const overlay     = document.getElementById('overlay');
+    const endMsg      = document.getElementById('endMsg');
+    const againBtn    = document.getElementById('againBtn');
+    const shareBtn    = document.getElementById('shareBtn');
+
+    /* ---------- יצירת כפתורי המספרים ---------- */
+    const btnMap = {};
+    POOL.forEach(n => {
+      const b = document.createElement('button');
+      b.textContent = n;
+      b.className = 'num-btn';
+      b.onclick   = () => addDigit(n);
       btnHolder.appendChild(b);
-      btnMap[n]=b;
+      btnMap[n] = b;
     });
 
-    startBtn.onclick = ()=>{
-      resetGame(); startTimer(); gameStarted=true;
-      startBtn.disabled=true; pauseBtn.disabled=false; resetBtn.disabled=false;
-    };
-    pauseBtn.onclick = ()=>{
-      clearInterval(timerInterval); gameStarted=false;
-      startBtn.disabled=false; pauseBtn.disabled=true;
-    };
-    resetBtn.onclick = ()=>{
-      clearInterval(timerInterval); resetGame();
-      startBtn.disabled=false; pauseBtn.disabled=true; resetBtn.disabled=true; gameStarted=false;
+    /* ---------- הפעלת/השהיית/איפוס משחק ---------- */
+    startBtn.onclick = () => {
+      resetGame();
+      startTimer();
+      gameStarted = true;
+      startBtn.disabled = true;
+      pauseBtn.disabled = false;
+      resetBtn.disabled = false;
     };
 
-    function startTimer(){
-      clearInterval(timerInterval); elapsed=0; updateTimer();
-      timerInterval=setInterval(()=>{
-        elapsed++; updateTimer();
-      },1000);
-    }
-    function updateTimer(){
-      const m=String(Math.floor(elapsed/60)).padStart(2,'0'),
-            s=String(elapsed%60).padStart(2,'0');
-      timerLbl.textContent=`זמן: ${m}:${s}`;
-    }
-
-    function resetGame(){
-      tries=0; attemptsLbl.textContent='ניסיונות: 0';
-      guess=[]; secret=[...POOL].sort(()=>Math.random()-0.5).slice(0,LEN);
-      tbody.innerHTML=''; slots.forEach(s=>{s.textContent='';s.classList.remove('filled');});
-      POOL.forEach(n=>btnMap[n].disabled=false);
-      submitBtn.disabled=true; if(overlay) overlay.classList.remove('show');
-    }
-
-    function addDigit(n){
-      if(!gameStarted||guess.includes(n)||guess.length>=LEN) return;
-      guess.push(n); btnMap[n].disabled=true;
-      slots[guess.length-1].textContent=n; slots[guess.length-1].classList.add('filled');
-      submitBtn.disabled = guess.length!==LEN;
-    }
-    delBtn.onclick = ()=>{
-      if(!gameStarted||!guess.length) return;
-      const last=guess.pop(); btnMap[last].disabled=false;
-      slots[guess.length].textContent=''; slots[guess.length].classList.remove('filled');
-      submitBtn.disabled=true;
+    pauseBtn.onclick = () => {
+      clearInterval(timerInterval);
+      gameStarted = false;
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
     };
 
-    submitBtn.onclick = ()=>{
-      if(!gameStarted) return;
-      tries++; attemptsLbl.textContent=`ניסיונות: ${tries}`;
-      const correct = guess.filter((d,i)=>d===secret[i]).length;
-      const overlap = guess.filter(d=>secret.includes(d)).length;
-      addRow([guess.join(''), LEN-overlap, overlap-correct, correct]);
-      if(correct===LEN) resetGame();
-      guess=[]; POOL.forEach(n=>btnMap[n].disabled=false);
-      submitBtn.disabled=true;
+    resetBtn.onclick = () => {
+      clearInterval(timerInterval);
+      resetGame();
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resetBtn.disabled = true;
+      gameStarted = false;
     };
 
-    function addRow([g,w,m,c]){
-      const r=tbody.insertRow();
-      r.insertCell().textContent=tbody.rows.length;
-      r.insertCell().textContent=g;
-      const cw=r.insertCell(); cw.textContent=w; cw.classList.add('cell-wrong');
-      const cm=r.insertCell(); cm.textContent=m; cm.classList.add('cell-misplaced');
-      const cc=r.insertCell(); cc.textContent=c; cc.classList.add('cell-correct');
-      document.getElementById('historyWrap').scrollTop=document.getElementById('historyWrap').scrollHeight;
+    /* ---------- טיימר ---------- */
+    function startTimer() {
+      clearInterval(timerInterval);
+      elapsed = 0;
+      updateTimer();
+      timerInterval = setInterval(() => {
+        elapsed++;
+        updateTimer();
+      }, 1000);
     }
 
-    helpBtn.onclick    = ()=>helpModal.classList.add('show');
-    closeHelp.onclick  = ()=>helpModal.classList.remove('show');
-    statsBtn.onclick   = ()=>{
-      const s=JSON.parse(localStorage.getItem('mmStats')||'{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
-      s.games++; s.totalTime+=elapsed; s.lastTime=elapsed;
-      s.bestTime = s.bestTime?Math.min(s.bestTime,elapsed):elapsed;
-      localStorage.setItem('mmStats',JSON.stringify(s));
-      document.getElementById('statLastTime').textContent=`משחק אחרון: ${formatTime(s.lastTime)}`;
-      document.getElementById('statBestTime').textContent=`שיא: ${formatTime(s.bestTime)}`;
-      const avg=s.games?Math.round(s.totalTime/s.games):0;
-      document.getElementById('statAvgTime').textContent=`ממוצע: ${formatTime(avg)}`;
+    function updateTimer() {
+      const m = String(Math.floor(elapsed / 60)).padStart(2, '0');
+      const s = String(elapsed % 60).padStart(2, '0');
+      timerLbl.textContent = `זמן: ${m}:${s}`;
+    }
+
+    /* ---------- איפוס משחק ---------- */
+    function resetGame() {
+      clearInterval(timerInterval);
+      elapsed = 0;
+      updateTimer();
+
+      tries = 0;
+      attemptsLbl.textContent = 'ניסיונות: 0';
+      guess = [];
+      secret = [...POOL].sort(() => Math.random() - 0.5).slice(0, LEN);
+
+      tbody.innerHTML = '';
+      slots.forEach(s => { s.textContent = ''; s.classList.remove('filled'); });
+      POOL.forEach(n => btnMap[n].disabled = false);
+
+      submitBtn.disabled = true;
+      overlay.classList.remove('show');
+      shareBtn.hidden = true;
+      shareMsg = '';
+    }
+
+    /* ---------- פעולות על הספרות ---------- */
+    function addDigit(n) {
+      if (!gameStarted || guess.includes(n) || guess.length >= LEN) return;
+      guess.push(n);
+      btnMap[n].disabled = true;
+      slots[guess.length - 1].textContent = n;
+      slots[guess.length - 1].classList.add('filled');
+      submitBtn.disabled = guess.length !== LEN;
+    }
+
+    delBtn.onclick = () => {
+      if (!gameStarted || !guess.length) return;
+      const last = guess.pop();
+      btnMap[last].disabled = false;
+      slots[guess.length].textContent = '';
+      slots[guess.length].classList.remove('filled');
+      submitBtn.disabled = true;
+    };
+
+    /* ---------- בדיקת ניחוש ---------- */
+    submitBtn.onclick = () => {
+      if (!gameStarted) return;
+
+      tries++;
+      attemptsLbl.textContent = `ניסיונות: ${tries}`;
+
+      const correct = guess.filter((d, i) => d === secret[i]).length;
+      const overlap = guess.filter(d => secret.includes(d)).length;
+      addRow([guess.join(''), LEN - overlap, overlap - correct, correct]);
+
+      /* ===== פידבק ניצחון ===== */
+      if (correct === LEN) {
+        clearInterval(timerInterval);
+        gameStarted = false;
+
+        const timeTxt = formatTime(elapsed);
+        endMsg.textContent = `כל הכבוד! פתרת את הקוד ב-${tries} ניסיונות וב-${timeTxt} דקות.`;
+        overlay.classList.add('show');
+
+        /* טקסט לשיתוף */
+        shareMsg = `🎉 פתרתי את קוד 4 הספרות ב-${tries} ניסיונות וב-${timeTxt}! נסו גם אתם 😉`;
+        shareBtn.hidden = false;
+
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = true;
+        submitBtn.disabled = true;
+        return; // לא מבצעים resetGame אוטומטי
+      }
+      /* ========================= */
+
+      guess = [];
+      POOL.forEach(n => btnMap[n].disabled = false);
+      submitBtn.disabled = true;
+    };
+
+    /* ---------- הצגת שורה בהיסטוריה ---------- */
+    function addRow([g, w, m, c]) {
+      const r = tbody.insertRow();
+      r.insertCell().textContent = tbody.rows.length;
+      r.insertCell().textContent = g;
+      const cw = r.insertCell(); cw.textContent = w; cw.classList.add('cell-wrong');
+      const cm = r.insertCell(); cm.textContent = m; cm.classList.add('cell-misplaced');
+      const cc = r.insertCell(); cc.textContent = c; cc.classList.add('cell-correct');
+      document.getElementById('historyWrap').scrollTop =
+        document.getElementById('historyWrap').scrollHeight;
+    }
+
+    /* ---------- כפתור שיתוף ---------- */
+    shareBtn.onclick = () => {
+      if (!shareMsg) return;
+
+      /* ניסיון עם Clipboard API מודרני */
+      if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(shareMsg)
+          .then(() => alert('📋 הטקסט הועתק ללוח'))
+          .catch(fallbackCopy);
+      } else {
+        fallbackCopy();
+      }
+
+      /* גיבוי לדפדפנים ישנים */
+      function fallbackCopy() {
+        const ta = document.createElement('textarea');
+        ta.value = shareMsg;
+        document.body.appendChild(ta);
+        ta.select();
+        document.execCommand('copy');
+        document.body.removeChild(ta);
+        alert('📋 הטקסט הועתק ללוח');
+      }
+    };
+
+    /* ---------- כפתור "משחק חדש" בחלון הסיום ---------- */
+    againBtn.onclick = () => {
+      overlay.classList.remove('show');
+      resetGame();
+      startBtn.disabled = false;
+      pauseBtn.disabled = true;
+      resetBtn.disabled = true;
+    };
+
+    /* ---------- מודלים, ערכות נושא, אדמין וכו' ---------- */
+    helpBtn.onclick   = () => helpModal.classList.add('show');
+    closeHelp.onclick = () => helpModal.classList.remove('show');
+
+    statsBtn.onclick  = () => {
+      const s = JSON.parse(localStorage.getItem('mmStats') ||
+        '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
+      s.games++; s.totalTime += elapsed; s.lastTime = elapsed;
+      s.bestTime = s.bestTime ? Math.min(s.bestTime, elapsed) : elapsed;
+      localStorage.setItem('mmStats', JSON.stringify(s));
+
+      document.getElementById('statLastTime').textContent =
+        `משחק אחרון: ${formatTime(s.lastTime)}`;
+      document.getElementById('statBestTime').textContent =
+        `שיא: ${formatTime(s.bestTime)}`;
+      const avg = s.games ? Math.round(s.totalTime / s.games) : 0;
+      document.getElementById('statAvgTime').textContent =
+        `ממוצע: ${formatTime(avg)}`;
+
       statsModal.classList.add('show');
     };
-    closeStats.onclick = ()=>statsModal.classList.remove('show');
-    themeToggle.onclick= ()=>document.body.classList.toggle('dark');
-    adminBtn.onclick   = ()=>{
-      const pwd=prompt("הזן סיסמת אדמין:");
-      if(pwd===atob(ADMIN_PW)) alert("הקוד הסודי הוא: "+secret.join(""));
-      else alert("סיסמה שגויה");
+    closeStats.onclick = () => statsModal.classList.remove('show');
+
+    themeToggle.onclick = () => document.body.classList.toggle('dark');
+
+    adminBtn.onclick = () => {
+      const pwd = prompt('הזן סיסמת אדמין:');
+      if (pwd === atob(ADMIN_PW))
+        alert('הקוד הסודי הוא: ' + secret.join(''));
+      else
+        alert('סיסמה שגויה');
     };
 
-    document.addEventListener('keydown',e=>{
-      if(/^[1-9]$/.test(e.key)) addDigit(+e.key);
-      if(e.key==='Backspace') delBtn.onclick();
-      if(e.key==='Enter') submitBtn.onclick();
+    /* ---------- קיצורי מקלדת ---------- */
+    document.addEventListener('keydown', e => {
+      if (/^[1-9]$/.test(e.key)) addDigit(+e.key);
+      if (e.key === 'Backspace') delBtn.onclick();
+      if (e.key === 'Enter') submitBtn.onclick();
     });
 
-    function formatTime(sec){
-      const m=String(Math.floor(sec/60)).padStart(2,'0'),
-            s=String(sec%60).padStart(2,'0');
+    /* ---------- פונקציית זמן mm:ss ---------- */
+    function formatTime(sec) {
+      const m = String(Math.floor(sec / 60)).padStart(2, '0');
+      const s = String(sec % 60).padStart(2, '0');
       return `${m}:${s}`;
     }
 
+    /* ---------- התחלה ---------- */
     resetGame();
   })();
   </script>

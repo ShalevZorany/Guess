@@ -335,6 +335,7 @@
     let secret = [], guess = [], tries = 0;
     let elapsed = 0, timerInterval;
     let gameStarted = false;
+    let isPaused = false; // הוספת משתנה למצב השהייה
     let shareMsg = '';             // טקסט לשיתוף
 
     /* ---------- אלמנטים ---------- */
@@ -377,35 +378,53 @@
 
     /* ---------- הפעלת/השהיית/איפוס משחק ---------- */
     startBtn.onclick = () => {
-      resetGame();
-      startTimer();
+      resetGame(); // מאפס גם את isPaused
+      startTimer(); // מתחיל טיימר מאפס
       gameStarted = true;
-      startBtn.disabled = true;
-      pauseBtn.disabled = false;
-      resetBtn.disabled = false;
+      // isPaused נשאר false
+      updateButtonStates();
+      setGameControlsDisabled(false);
     };
 
     pauseBtn.onclick = () => {
-      clearInterval(timerInterval);
-      gameStarted = false;
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
+      if (!gameStarted) return;
+
+      isPaused = !isPaused;
+      if (isPaused) {
+        clearInterval(timerInterval);
+        pauseBtn.textContent = 'המשך';
+        setGameControlsDisabled(true);
+      } else {
+        runTimer(); // המשך טיימר בלי לאפס elapsed
+        pauseBtn.textContent = 'השהה';
+        setGameControlsDisabled(false);
+      }
+      updateButtonStates(); // עדכון מצב כפתורים כללי
     };
 
     resetBtn.onclick = () => {
-      clearInterval(timerInterval);
+      // clearInterval(timerInterval) יקרה בתוך resetGame
       resetGame();
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
-      resetBtn.disabled = true;
-      gameStarted = false;
+      gameStarted = false; // לוודא שמשחק לא פעיל
+      // isPaused כבר false מ-resetGame
+      updateButtonStates();
+      setGameControlsDisabled(true); // כי אין משחק פעיל
+      // לוודא שכפתורי הספרות מאופשרים רק אם המשחק יתחיל מחדש
+      // resetGame כבר דואג לזה, אבל נשאיר פה למקרה הצורך
+      // POOL.forEach(n => btnMap[n].disabled = false); // resetGame עושה זאת
+      // submitBtn.disabled = true; // resetGame עושה זאת
     };
 
     /* ---------- טיימר ---------- */
-    function startTimer() {
+    function startTimer() { // מיועד להתחלת משחק חדש (מאפס זמן)
       clearInterval(timerInterval);
       elapsed = 0;
       updateTimer();
+      runTimer(); // קורא ל runTimer כדי להתחיל את הספירה
+    }
+
+    function runTimer() { // מיועד להמשך ספירה או התחלה חדשה
+      clearInterval(timerInterval); // למנוע כפילות טיימרים
       timerInterval = setInterval(() => {
         elapsed++;
         updateTimer();
@@ -423,6 +442,7 @@
       clearInterval(timerInterval);
       elapsed = 0;
       updateTimer();
+      isPaused = false; // איפוס מצב השהייה
 
       tries = 0;
       attemptsLbl.textContent = 'ניסיונות: 0';
@@ -431,36 +451,61 @@
 
       tbody.innerHTML = '';
       slots.forEach(s => { s.textContent = ''; s.classList.remove('filled'); });
-      POOL.forEach(n => btnMap[n].disabled = false);
+      
+      setGameControlsDisabled(false); // מאפשר את כל כפתורי הספרות וכו'
+      POOL.forEach(n => btnMap[n].disabled = false); // ודאות נוספת
+      submitBtn.disabled = true; // כי הניחוש ריק
 
-      submitBtn.disabled = true;
       overlay.classList.remove('show');
       shareBtn.hidden = true;
       shareMsg = '';
+      
+      // עדכון מצב כפתורי שליטה עיקריים בסוף האיפוס
+      // gameStarted יטופל על ידי הפונקציה שקראה ל resetGame
+      // updateButtonStates(); // נקרא מבחוץ לאחר resetGame
+      pauseBtn.textContent = 'השהה';
+    }
+    
+    function setGameControlsDisabled(disabled) {
+      POOL.forEach(n => {
+        // נאפשר כפתור רק אם הוא לא חלק מהניחוש הנוכחי או אם מאפשרים הכל
+        if (!disabled && guess.includes(n)) {
+          btnMap[n].disabled = true;
+        } else {
+          btnMap[n].disabled = disabled;
+        }
+      });
+      delBtn.disabled = disabled;
+      // submitBtn נשלט גם על ידי אורך הניחוש
+      if (disabled) {
+        submitBtn.disabled = true;
+      } else {
+        submitBtn.disabled = guess.length !== LEN;
+      }
     }
 
     /* ---------- פעולות על הספרות ---------- */
     function addDigit(n) {
-      if (!gameStarted || guess.includes(n) || guess.length >= LEN) return;
+      if (!gameStarted || isPaused || guess.includes(n) || guess.length >= LEN) return;
       guess.push(n);
-      btnMap[n].disabled = true;
+      btnMap[n].disabled = true; // השבתת הכפתור שנלחץ
       slots[guess.length - 1].textContent = n;
       slots[guess.length - 1].classList.add('filled');
-      submitBtn.disabled = guess.length !== LEN;
+      submitBtn.disabled = guess.length !== LEN; // הפעל אם הניחוש מלא
     }
 
     delBtn.onclick = () => {
-      if (!gameStarted || !guess.length) return;
+      if (!gameStarted || isPaused || !guess.length) return;
       const last = guess.pop();
-      btnMap[last].disabled = false;
+      btnMap[last].disabled = false; // הפעל מחדש את הכפתור שהוסר
       slots[guess.length].textContent = '';
       slots[guess.length].classList.remove('filled');
-      submitBtn.disabled = true;
+      submitBtn.disabled = true; // תמיד השבת אחרי מחיקה כי הניחוש לא מלא
     };
 
     /* ---------- בדיקת ניחוש ---------- */
     submitBtn.onclick = () => {
-      if (!gameStarted) return;
+      if (!gameStarted || isPaused) return;
 
       tries++;
       attemptsLbl.textContent = `ניסיונות: ${tries}`;
@@ -473,6 +518,7 @@
       if (correct === LEN) {
         clearInterval(timerInterval);
         gameStarted = false;
+        isPaused = false; // איפוס מצב השהייה בניצחון
 
         const timeTxt = formatTime(elapsed);
         endMsg.textContent = `כל הכבוד! פתרת את הקוד ב-${tries} ניסיונות וב-${timeTxt} דקות.`;
@@ -482,17 +528,17 @@
         shareMsg = `🎉 פתרתי את קוד 4 הספרות ב-${tries} ניסיונות וב-${timeTxt}! נסו גם אתם 😉`;
         shareBtn.hidden = false;
 
-        startBtn.disabled = false;
-        pauseBtn.disabled = true;
-        resetBtn.disabled = true;
-        submitBtn.disabled = true;
-        return; // לא מבצעים resetGame אוטומטי
+        updateButtonStates(); // עדכון כפתורי שליטה עיקריים
+        setGameControlsDisabled(true); // השבתת כפתורי משחק (ספרות, מחק, שלח)
+        return; 
       }
       /* ========================= */
 
       guess = [];
-      POOL.forEach(n => btnMap[n].disabled = false);
-      submitBtn.disabled = true;
+      // POOL.forEach(n => btnMap[n].disabled = false); // setGameControlsDisabled(false) יעשה זאת
+      // submitBtn.disabled = true; // setGameControlsDisabled(false) ואז addDigit יטפלו בזה
+      setGameControlsDisabled(false); // אפשר כפתורי ספרות ומחק, submit יישאר disabled כי guess ריק
+      // submitBtn.disabled = true; // לוודא שכפתור השליחה מושבת
     };
 
     /* ---------- הצגת שורה בהיסטוריה ---------- */
@@ -536,10 +582,29 @@
     againBtn.onclick = () => {
       overlay.classList.remove('show');
       resetGame();
-      startBtn.disabled = false;
-      pauseBtn.disabled = true;
-      resetBtn.disabled = true;
+      gameStarted = false; // משחק חדש לא התחיל עדיין
+      updateButtonStates();
+      setGameControlsDisabled(true); // כפתורי משחק מושבתים עד תחילת משחק
     };
+
+    /* ---------- עדכון מצב כפתורי שליטה עיקריים ---------- */
+    function updateButtonStates() {
+      if (!gameStarted) { // אם אין משחק פעיל (כולל אחרי reset או ניצחון)
+        startBtn.disabled = false;
+        pauseBtn.disabled = true;
+        resetBtn.disabled = true;
+        pauseBtn.textContent = 'השהה';
+      } else { // אם המשחק התחיל
+        startBtn.disabled = true; 
+        pauseBtn.disabled = false; // אפשר להשהות/להמשיך
+        resetBtn.disabled = false;
+        if (isPaused) {
+          pauseBtn.textContent = 'המשך';
+        } else {
+          pauseBtn.textContent = 'השהה';
+        }
+      }
+    }
 
     /* ---------- מודלים, ערכות נושא, אדמין וכו' ---------- */
     helpBtn.onclick   = () => helpModal.classList.add('show');
@@ -576,9 +641,17 @@
 
     /* ---------- קיצורי מקלדת ---------- */
     document.addEventListener('keydown', e => {
+      if (isPaused && e.key !== 'Escape') return; // התעלם מרוב המקשים כשהמשחק מושהה
+
       if (/^[1-9]$/.test(e.key)) addDigit(+e.key);
       if (e.key === 'Backspace') delBtn.onclick();
-      if (e.key === 'Enter') submitBtn.onclick();
+      if (e.key === 'Enter' && !submitBtn.disabled) submitBtn.onclick();
+      // אופציונלי: טיפול ב-Escape לסגירת מודלים או השהייה
+      // if (e.key === 'Escape') {
+      //   if (helpModal.classList.contains('show')) helpModal.classList.remove('show');
+      //   else if (statsModal.classList.contains('show')) statsModal.classList.remove('show');
+      //   else if (gameStarted && !isPaused) pauseBtn.onclick(); // השהה עם Escape
+      // }
     });
 
     /* ---------- פונקציית זמן mm:ss ---------- */
@@ -590,6 +663,8 @@
 
     /* ---------- התחלה ---------- */
     resetGame();
+    updateButtonStates(); // קריאה ראשונית לקביעת מצב הכפתורים
+    setGameControlsDisabled(true); // בתחילה, כפתורי המשחק מושבתים
   })();
   </script>
 </body>

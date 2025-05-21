@@ -389,17 +389,17 @@
     pauseBtn.onclick = () => {
       if (!gameStarted) return;
 
-      isPaused = !isPaused;
-      if (isPaused) {
+      isPaused = !isPaused; // This toggles the pause state
+      if (isPaused) { // This block executes when pausing
         clearInterval(timerInterval);
-        pauseBtn.textContent = 'המשך';
+        pauseBtn.textContent = 'המשך'; // Text changes to "Resume"
         setGameControlsDisabled(true);
-      } else {
+      } else { // This block executes when resuming
         runTimer(); // המשך טיימר בלי לאפס elapsed
-        pauseBtn.textContent = 'השהה';
+        pauseBtn.textContent = 'השהה'; // Text changes back to "Pause"
         setGameControlsDisabled(false);
       }
-      updateButtonStates(); // עדכון מצב כפתורים כללי
+      updateButtonStates(); // Updates general button states based on the new isPaused state
     };
 
     resetBtn.onclick = () => {

@@ -5,8 +5,6 @@
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
   <title>משחק ניחוש ספרות</title>
-
-  <!-- ====== עיצוב ====== -->
   <style>
     :root {
       --bg: linear-gradient(135deg, #ece9e6 0%, #c9d6ff 100%);
@@ -34,8 +32,6 @@
       --misplaced: #fbc02d;
       --wrong: #555555;
     }
-
-    /* מניעת pinch-zoom ו-double-tap-zoom */
     html, body {
       touch-action: manipulation;
       -ms-touch-action: manipulation;
@@ -53,8 +49,6 @@
       font-family: Arial, sans-serif;
       font-size: clamp(14px,3.6vw,20px);
     }
-
-    /* topbar */
     #topbar {
       display: flex;
       flex-wrap: wrap;
@@ -97,8 +91,6 @@
       padding: 0;
     }
     #adminBtn { font-size: 4vw; opacity: .6; }
-
-    /* main ותכולתו */
     #main {
       flex: 1;
       display: flex;
@@ -113,8 +105,6 @@
       .num-btn { font-size: 1.5rem; }
       #controls button { font-size: 2rem; }
     }
-
-    /* board */
     #board { display: flex; flex-direction: column; gap: var(--gap); }
     #buttons {
       direction: ltr;
@@ -184,8 +174,6 @@
     .action-btn:active { transform: scale(0.97); }
     #submit { background: var(--primary); color: #fff; }
     #submit:disabled { background: #a8ceff; cursor: not-allowed; }
-
-    /* history */
     #historyWrap {
       flex: 1;
       min-height: 0;
@@ -211,8 +199,6 @@
       from { opacity: 0; transform: translateY(6px); }
       to   { opacity: 1; transform: translateY(0); }
     }
-
-    /* modals & overlay */
     .modal, #overlay {
       position: fixed;
       inset: 0;
@@ -268,7 +254,6 @@
 
   <!-- ====== Main Area ====== -->
   <div id="main">
-    <!-- לוח המשחק -->
     <div id="board">
       <div id="buttons"></div>
       <button id="delBtn" class="num-btn">⌫</button>
@@ -278,8 +263,6 @@
       </div>
       <button id="submit" class="action-btn" disabled>בדיקת ניחוש</button>
     </div>
-
-    <!-- היסטוריה -->
     <div id="historyWrap">
       <table id="history">
         <thead>
@@ -303,7 +286,6 @@
       <button id="closeHelp">סגור</button>
     </div>
   </div>
-
   <div id="statsModal" class="modal">
     <div class="modal-content">
       <h2>סטטיסטיקות זמן</h2>
@@ -313,8 +295,6 @@
       <button id="closeStats">סגור</button>
     </div>
   </div>
-
-  <!-- ====== End-Game Dialog ====== -->
   <div id="overlay">
     <div class="dialog">
       <p id="endMsg"></p>
@@ -326,29 +306,27 @@
   <!-- ====== Logic ====== -->
   <script>
   (() => {
-    /* ---------- קבועים ---------- */
+    // ---------- קבועים ----------
     const POOL = [1,2,3,4,5,6,7,8,9];
     const LEN  = 4;
     const ADMIN_PW = 'MjUxMg==';   // "2512" ב-base64
 
-    /* ---------- מצב משחק ---------- */
+    // ---------- מצב משחק ----------
     let secret = [], guess = [], tries = 0;
     let elapsed = 0, timerInterval;
     let gameStarted = false;
-    let shareMsg = '';             // טקסט לשיתוף
+    let shareMsg = '';
 
-    /* ---------- אלמנטים ---------- */
+    // ---------- אלמנטים ----------
     const startBtn    = document.getElementById('startBtn');
     const pauseBtn    = document.getElementById('pauseBtn');
     const resetBtn    = document.getElementById('resetBtn');
     const timerLbl    = document.getElementById('timer');
     const attemptsLbl = document.getElementById('attempts');
-
     const btnHolder   = document.getElementById('buttons');
     const slots       = [...document.querySelectorAll('.slot')];
     const submitBtn   = document.getElementById('submit');
     const delBtn      = document.getElementById('delBtn');
-
     const tbody       = document.querySelector('#history tbody');
     const helpBtn     = document.getElementById('helpBtn');
     const helpModal   = document.getElementById('helpModal');
@@ -358,13 +336,12 @@
     const closeStats  = document.getElementById('closeStats');
     const themeToggle = document.getElementById('themeToggle');
     const adminBtn    = document.getElementById('adminBtn');
-
     const overlay     = document.getElementById('overlay');
     const endMsg      = document.getElementById('endMsg');
     const againBtn    = document.getElementById('againBtn');
     const shareBtn    = document.getElementById('shareBtn');
 
-    /* ---------- יצירת כפתורי המספרים ---------- */
+    // ---------- יצירת כפתורי המספרים ----------
     const btnMap = {};
     POOL.forEach(n => {
       const b = document.createElement('button');
@@ -375,8 +352,9 @@
       btnMap[n] = b;
     });
 
-    /* ---------- הפעלת/השהיית/איפוס משחק ---------- */
+    // ---------- הפעלת/השהיית/איפוס משחק ----------
     startBtn.onclick = () => {
+      if (gameStarted) return; // לא להתחיל פעמיים
       resetGame();
       startTimer();
       gameStarted = true;
@@ -401,7 +379,7 @@
       gameStarted = false;
     };
 
-    /* ---------- טיימר ---------- */
+    // ---------- טיימר ----------
     function startTimer() {
       clearInterval(timerInterval);
       elapsed = 0;
@@ -418,28 +396,25 @@
       timerLbl.textContent = `זמן: ${m}:${s}`;
     }
 
-    /* ---------- איפוס משחק ---------- */
+    // ---------- איפוס משחק ----------
     function resetGame() {
       clearInterval(timerInterval);
       elapsed = 0;
       updateTimer();
-
       tries = 0;
       attemptsLbl.textContent = 'ניסיונות: 0';
       guess = [];
       secret = [...POOL].sort(() => Math.random() - 0.5).slice(0, LEN);
-
       tbody.innerHTML = '';
       slots.forEach(s => { s.textContent = ''; s.classList.remove('filled'); });
       POOL.forEach(n => btnMap[n].disabled = false);
-
       submitBtn.disabled = true;
       overlay.classList.remove('show');
       shareBtn.hidden = true;
       shareMsg = '';
     }
 
-    /* ---------- פעולות על הספרות ---------- */
+    // ---------- פעולות על הספרות ----------
     function addDigit(n) {
       if (!gameStarted || guess.includes(n) || guess.length >= LEN) return;
       guess.push(n);
@@ -455,47 +430,50 @@
       btnMap[last].disabled = false;
       slots[guess.length].textContent = '';
       slots[guess.length].classList.remove('filled');
-      submitBtn.disabled = true;
+      submitBtn.disabled = guess.length !== LEN;
     };
 
-    /* ---------- בדיקת ניחוש ---------- */
+    // ---------- בדיקת ניחוש ----------
     submitBtn.onclick = () => {
-      if (!gameStarted) return;
+      if (!gameStarted || guess.length !== LEN) return;
 
       tries++;
       attemptsLbl.textContent = `ניסיונות: ${tries}`;
-
       const correct = guess.filter((d, i) => d === secret[i]).length;
       const overlap = guess.filter(d => secret.includes(d)).length;
       addRow([guess.join(''), LEN - overlap, overlap - correct, correct]);
 
-      /* ===== פידבק ניצחון ===== */
+      // ===== פידבק ניצחון =====
       if (correct === LEN) {
         clearInterval(timerInterval);
         gameStarted = false;
+        POOL.forEach(n => btnMap[n].disabled = true); // מנטרל כפתורים
+        submitBtn.disabled = true;
 
         const timeTxt = formatTime(elapsed);
         endMsg.textContent = `כל הכבוד! פתרת את הקוד ב-${tries} ניסיונות וב-${timeTxt} דקות.`;
         overlay.classList.add('show');
 
-        /* טקסט לשיתוף */
+        // טקסט לשיתוף
         shareMsg = `🎉 פתרתי את קוד 4 הספרות ב-${tries} ניסיונות וב-${timeTxt}! נסו גם אתם 😉`;
         shareBtn.hidden = false;
 
         startBtn.disabled = false;
         pauseBtn.disabled = true;
         resetBtn.disabled = true;
-        submitBtn.disabled = true;
-        return; // לא מבצעים resetGame אוטומטי
+
+        updateStats(elapsed); // עדכון סטטיסטיקות רק כאן
+        return;
       }
-      /* ========================= */
+      // =========================
 
       guess = [];
       POOL.forEach(n => btnMap[n].disabled = false);
       submitBtn.disabled = true;
+      slots.forEach(s => { s.textContent = ''; s.classList.remove('filled'); });
     };
 
-    /* ---------- הצגת שורה בהיסטוריה ---------- */
+    // ---------- הצגת שורה בהיסטוריה ----------
     function addRow([g, w, m, c]) {
       const r = tbody.insertRow();
       r.insertCell().textContent = tbody.rows.length;
@@ -507,11 +485,9 @@
         document.getElementById('historyWrap').scrollHeight;
     }
 
-    /* ---------- כפתור שיתוף ---------- */
+    // ---------- כפתור שיתוף ----------
     shareBtn.onclick = () => {
       if (!shareMsg) return;
-
-      /* ניסיון עם Clipboard API מודרני */
       if (navigator.clipboard && navigator.clipboard.writeText) {
         navigator.clipboard.writeText(shareMsg)
           .then(() => alert('📋 הטקסט הועתק ללוח'))
@@ -519,8 +495,6 @@
       } else {
         fallbackCopy();
       }
-
-      /* גיבוי לדפדפנים ישנים */
       function fallbackCopy() {
         const ta = document.createElement('textarea');
         ta.value = shareMsg;
@@ -532,7 +506,7 @@
       }
     };
 
-    /* ---------- כפתור "משחק חדש" בחלון הסיום ---------- */
+    // ---------- כפתור "משחק חדש" בחלון הסיום ----------
     againBtn.onclick = () => {
       overlay.classList.remove('show');
       resetGame();
@@ -541,17 +515,13 @@
       resetBtn.disabled = true;
     };
 
-    /* ---------- מודלים, ערכות נושא, אדמין וכו' ---------- */
+    // ---------- מודלים, ערכות נושא, אדמין וכו' ----------
     helpBtn.onclick   = () => helpModal.classList.add('show');
     closeHelp.onclick = () => helpModal.classList.remove('show');
 
     statsBtn.onclick  = () => {
       const s = JSON.parse(localStorage.getItem('mmStats') ||
         '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
-      s.games++; s.totalTime += elapsed; s.lastTime = elapsed;
-      s.bestTime = s.bestTime ? Math.min(s.bestTime, elapsed) : elapsed;
-      localStorage.setItem('mmStats', JSON.stringify(s));
-
       document.getElementById('statLastTime').textContent =
         `משחק אחרון: ${formatTime(s.lastTime)}`;
       document.getElementById('statBestTime').textContent =
@@ -559,7 +529,6 @@
       const avg = s.games ? Math.round(s.totalTime / s.games) : 0;
       document.getElementById('statAvgTime').textContent =
         `ממוצע: ${formatTime(avg)}`;
-
       statsModal.classList.add('show');
     };
     closeStats.onclick = () => statsModal.classList.remove('show');
@@ -574,21 +543,31 @@
         alert('סיסמה שגויה');
     };
 
-    /* ---------- קיצורי מקלדת ---------- */
+    // ---------- קיצורי מקלדת ----------
     document.addEventListener('keydown', e => {
+      if (!gameStarted) return;
       if (/^[1-9]$/.test(e.key)) addDigit(+e.key);
       if (e.key === 'Backspace') delBtn.onclick();
       if (e.key === 'Enter') submitBtn.onclick();
     });
 
-    /* ---------- פונקציית זמן mm:ss ---------- */
+    // ---------- פונקציית זמן mm:ss ----------
     function formatTime(sec) {
       const m = String(Math.floor(sec / 60)).padStart(2, '0');
       const s = String(sec % 60).padStart(2, '0');
       return `${m}:${s}`;
     }
 
-    /* ---------- התחלה ---------- */
+    // ---------- עדכון סטטיסטיקות ----------
+    function updateStats(time) {
+      const s = JSON.parse(localStorage.getItem('mmStats') ||
+        '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
+      s.games++; s.totalTime += time; s.lastTime = time;
+      s.bestTime = s.bestTime ? Math.min(s.bestTime, time) : time;
+      localStorage.setItem('mmStats', JSON.stringify(s));
+    }
+
+    // ---------- התחלה ----------
     resetGame();
   })();
   </script>

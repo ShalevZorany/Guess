@@ -354,8 +354,10 @@
 
     // ---------- הפעלת/השהיית/איפוס משחק ----------
     startBtn.onclick = () => {
-      if (gameStarted) return; // לא להתחיל פעמיים
-      resetGame();
+   resetGame();
+      // אם המשחק בתחילת דרכו טרם בוצעה פעולה, נאתחל
+      if (tries === 0 && elapsed === 0 && guess.length === 0)
+        resetGame();
       startTimer();
       gameStarted = true;
       startBtn.disabled = true;

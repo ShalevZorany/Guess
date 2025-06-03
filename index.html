@@ -354,11 +354,14 @@
 
     // ---------- הפעלת/השהיית/איפוס משחק ----------
     startBtn.onclick = () => {
-   resetGame();
-      // אם המשחק בתחילת דרכו טרם בוצעה פעולה, נאתחל
-      if (tries === 0 && elapsed === 0 && guess.length === 0)
+      // אם המשחק בתחילת דרכו טרם בוצעה פעולה, נאתחל ונאפס טיימר
+      if (tries === 0 && elapsed === 0 && guess.length === 0) {
         resetGame();
-      startTimer();
+        startTimer(true);
+      } else {
+        // חידוש משחק שהושהה - המשך הטיימר
+        startTimer();
+      }
       gameStarted = true;
       startBtn.disabled = true;
       pauseBtn.disabled = false;
@@ -382,9 +385,9 @@
     };
 
     // ---------- טיימר ----------
-    function startTimer() {
+    function startTimer(reset = false) {
       clearInterval(timerInterval);
-      elapsed = 0;
+      if (reset) elapsed = 0;
       updateTimer();
       timerInterval = setInterval(() => {
         elapsed++;

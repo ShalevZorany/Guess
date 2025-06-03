@@ -233,6 +233,13 @@
       color: #fff;
       cursor: pointer;
     }
+    #recordsList {
+      list-style: none;
+      padding: 0;
+      margin: 2vw 0 0;
+      text-align: right;
+    }
+    #recordsList li { margin: .5vw 0; }
   </style>
 </head>
 
@@ -295,6 +302,9 @@
       <p id="statLastAttempts">ניסיונות אחרונים: --</p>
       <p id="statBestAttempts">שיא ניסיונות: --</p>
       <p id="statAvgAttempts">ממוצע ניסיונות: --</p>
+      <h3>טבלת השיאים</h3>
+      <ol id="recordsList"></ol>
+      <button id="resetStats">איפוס נתונים</button>
       <button id="closeStats">סגור</button>
     </div>
   </div>
@@ -343,6 +353,7 @@
     const endMsg      = document.getElementById('endMsg');
     const againBtn    = document.getElementById('againBtn');
     const shareBtn    = document.getElementById('shareBtn');
+    const resetStats  = document.getElementById('resetStats');
 
     // ---------- יצירת כפתורי המספרים ----------
     const btnMap = {};
@@ -544,9 +555,25 @@
       const avgA = s.games ? Math.round(s.totalAttempts / s.games) : 0;
       document.getElementById('statAvgAttempts').textContent =
         `ממוצע ניסיונות: ${avgA}`;
+      const recs = JSON.parse(localStorage.getItem('mmRecords') || '[]');
+      const list = document.getElementById('recordsList');
+      if (recs.length) {
+        list.innerHTML = recs.map((r,i) =>
+          `<li>${i+1}. ${formatTime(r.time)} - ${r.attempts} ניסיונות</li>`).join('');
+      } else {
+        list.innerHTML = '<li>אין נתונים</li>';
+      }
       statsModal.classList.add('show');
     };
     closeStats.onclick = () => statsModal.classList.remove('show');
+
+    resetStats.onclick = () => {
+      if (confirm('האם לאפס את הנתונים?')) {
+        localStorage.removeItem('mmStats');
+        localStorage.removeItem('mmRecords');
+        document.getElementById('recordsList').innerHTML = '<li>אין נתונים</li>';
+      }
+    };
 
     themeToggle.onclick = () => document.body.classList.toggle('dark');
 
@@ -582,6 +609,12 @@
       s.totalAttempts += attempts; s.lastAttempts = attempts;
       s.bestAttempts = s.bestAttempts ? Math.min(s.bestAttempts, attempts) : attempts;
       localStorage.setItem('mmStats', JSON.stringify(s));
+
+      const records = JSON.parse(localStorage.getItem('mmRecords') || '[]');
+      records.push({ time, attempts });
+      records.sort((a,b) => a.time - b.time || a.attempts - b.attempts);
+      records.splice(5);
+      localStorage.setItem('mmRecords', JSON.stringify(records));
     }
 
     // ---------- התחלה ----------

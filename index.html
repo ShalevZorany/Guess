@@ -288,10 +288,13 @@
   </div>
   <div id="statsModal" class="modal">
     <div class="modal-content">
-      <h2>סטטיסטיקות זמן</h2>
+      <h2>סטטיסטיקות משחק</h2>
       <p id="statLastTime">משחק אחרון: --:--</p>
-      <p id="statBestTime">שיא: --:--</p>
-      <p id="statAvgTime">ממוצע: --:--</p>
+      <p id="statBestTime">שיא זמן: --:--</p>
+      <p id="statAvgTime">ממוצע זמן: --:--</p>
+      <p id="statLastAttempts">ניסיונות אחרונים: --</p>
+      <p id="statBestAttempts">שיא ניסיונות: --</p>
+      <p id="statAvgAttempts">ממוצע ניסיונות: --</p>
       <button id="closeStats">סגור</button>
     </div>
   </div>
@@ -354,11 +357,14 @@
 
     // ---------- הפעלת/השהיית/איפוס משחק ----------
     startBtn.onclick = () => {
-   resetGame();
-      // אם המשחק בתחילת דרכו טרם בוצעה פעולה, נאתחל
-      if (tries === 0 && elapsed === 0 && guess.length === 0)
+      // אם המשחק בתחילת דרכו טרם בוצעה פעולה, נאתחל ונאפס טיימר
+      if (tries === 0 && elapsed === 0 && guess.length === 0) {
         resetGame();
-      startTimer();
+        startTimer(true);
+      } else {
+        // חידוש משחק שהושהה - המשך הטיימר
+        startTimer();
+      }
       gameStarted = true;
       startBtn.disabled = true;
       pauseBtn.disabled = false;
@@ -382,9 +388,9 @@
     };
 
     // ---------- טיימר ----------
-    function startTimer() {
+    function startTimer(reset = false) {
       clearInterval(timerInterval);
-      elapsed = 0;
+      if (reset) elapsed = 0;
       updateTimer();
       timerInterval = setInterval(() => {
         elapsed++;
@@ -464,7 +470,7 @@
         pauseBtn.disabled = true;
         resetBtn.disabled = true;
 
-        updateStats(elapsed); // עדכון סטטיסטיקות רק כאן
+        updateStats(elapsed, tries); // עדכון סטטיסטיקות רק כאן
         return;
       }
       // =========================
@@ -523,14 +529,21 @@
 
     statsBtn.onclick  = () => {
       const s = JSON.parse(localStorage.getItem('mmStats') ||
-        '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
+        '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0,"totalAttempts":0,"bestAttempts":0,"lastAttempts":0}');
       document.getElementById('statLastTime').textContent =
         `משחק אחרון: ${formatTime(s.lastTime)}`;
       document.getElementById('statBestTime').textContent =
-        `שיא: ${formatTime(s.bestTime)}`;
-      const avg = s.games ? Math.round(s.totalTime / s.games) : 0;
+        `שיא זמן: ${formatTime(s.bestTime)}`;
+      const avgT = s.games ? Math.round(s.totalTime / s.games) : 0;
       document.getElementById('statAvgTime').textContent =
-        `ממוצע: ${formatTime(avg)}`;
+        `ממוצע זמן: ${formatTime(avgT)}`;
+      document.getElementById('statLastAttempts').textContent =
+        `ניסיונות אחרונים: ${s.lastAttempts || 0}`;
+      document.getElementById('statBestAttempts').textContent =
+        `שיא ניסיונות: ${s.bestAttempts || 0}`;
+      const avgA = s.games ? Math.round(s.totalAttempts / s.games) : 0;
+      document.getElementById('statAvgAttempts').textContent =
+        `ממוצע ניסיונות: ${avgA}`;
       statsModal.classList.add('show');
     };
     closeStats.onclick = () => statsModal.classList.remove('show');
@@ -561,11 +574,13 @@
     }
 
     // ---------- עדכון סטטיסטיקות ----------
-    function updateStats(time) {
+    function updateStats(time, attempts) {
       const s = JSON.parse(localStorage.getItem('mmStats') ||
-        '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0}');
+        '{"games":0,"totalTime":0,"bestTime":0,"lastTime":0,"totalAttempts":0,"bestAttempts":0,"lastAttempts":0}');
       s.games++; s.totalTime += time; s.lastTime = time;
       s.bestTime = s.bestTime ? Math.min(s.bestTime, time) : time;
+      s.totalAttempts += attempts; s.lastAttempts = attempts;
+      s.bestAttempts = s.bestAttempts ? Math.min(s.bestAttempts, attempts) : attempts;
       localStorage.setItem('mmStats', JSON.stringify(s));
     }
 

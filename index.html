@@ -4,10 +4,11 @@
   <meta charset="UTF-8" />
   <meta name="viewport"
         content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
+  <link href="https://fonts.googleapis.com/css2?family=Varela+Round&display=swap" rel="stylesheet">
   <title>משחק ניחוש ספרות</title>
   <style>
     :root {
-      --bg: linear-gradient(135deg, #ece9e6 0%, #c9d6ff 100%);
+      --bg: linear-gradient(135deg, #f0f4ff 0%, #d9e5ff 100%);
       --card: #ffffffcc;
       --text: #222222;
       --primary: #1e88e5;
@@ -19,9 +20,10 @@
       --wrong: #e0e0e0;
       --tile: min(14vmin,18vw);
       --gap: 2vw;
+      --shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     body.dark {
-      --bg: linear-gradient(135deg, #2c3e50 0%, #4ca1af 100%);
+      --bg: linear-gradient(135deg, #243447 0%, #2e3e55 100%);
       --card: #1e1e1ecc;
       --text: #e5e5e5;
       --primary: #64b5f6;
@@ -46,8 +48,17 @@
       flex-direction: column;
       background: var(--bg);
       color: var(--text);
-      font-family: Arial, sans-serif;
+      font-family: 'Varela Round', Arial, sans-serif;
       font-size: clamp(14px,3.6vw,20px);
+    }
+    #wrapper {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      margin: 0 auto;
+      padding: var(--gap);
+      width: 100%;
+      max-width: 960px;
     }
     #topbar {
       display: flex;
@@ -57,6 +68,10 @@
       padding: 1.5vw;
       width: 100%;
       overflow-x: hidden;
+      background: var(--card);
+      border-radius: 8px;
+      box-shadow: var(--shadow);
+      margin-bottom: var(--gap);
     }
     #topbar > * { flex: 0 0 auto; }
     #topbar button {
@@ -97,6 +112,9 @@
       flex-direction: column;
       gap: var(--gap);
       padding: 0 3vw;
+      max-width: 900px;
+      width: 100%;
+      margin: auto;
     }
     @media (min-width: 768px) {
       #main { flex-direction: row; }
@@ -105,7 +123,15 @@
       .num-btn { font-size: 1.5rem; }
       #controls button { font-size: 2rem; }
     }
-    #board { display: flex; flex-direction: column; gap: var(--gap); }
+    #board {
+      display: flex;
+      flex-direction: column;
+      gap: var(--gap);
+      background: var(--card);
+      border-radius: 8px;
+      padding: var(--gap);
+      box-shadow: var(--shadow);
+    }
     #buttons {
       direction: ltr;
       display: grid;
@@ -120,6 +146,7 @@
       border: 2px solid var(--border);
       border-radius: 6px;
       background: var(--card);
+      box-shadow: var(--shadow);
       cursor: pointer;
       transition: background .15s, transform .1s;
     }
@@ -150,6 +177,7 @@
       align-items: center;
       justify-content: center;
       background: var(--card);
+      box-shadow: var(--shadow);
       font-size: calc(var(--tile)*.5);
       transition: background .2s, transform .3s;
     }
@@ -178,7 +206,11 @@
       flex: 1;
       min-height: 0;
       overflow-y: auto;
-      padding-bottom: 3vw;
+      background: var(--card);
+      border-radius: 8px;
+      padding: var(--gap);
+      padding-bottom: calc(3vw + var(--gap));
+      box-shadow: var(--shadow);
     }
     table { width: 100%; border-collapse: collapse; }
     th, td {
@@ -244,6 +276,7 @@
 </head>
 
 <body>
+  <div id="wrapper">
   <!-- ====== Top Bar ====== -->
   <div id="topbar">
     <button id="startBtn">התחל משחק</button>
@@ -315,6 +348,8 @@
       <button id="shareBtn" hidden>שיתוף</button>
     </div>
   </div>
+
+  </div> <!-- wrapper -->
 
   <!-- ====== Logic ====== -->
   <script>

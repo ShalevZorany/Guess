@@ -18,7 +18,7 @@
       --correct: #4caf50;
       --misplaced: #ffeb3b;
       --wrong: #e0e0e0;
-      --tile: min(16vmin,20vw);
+      --tile: min(14vmin,18vw);
       --gap: 2vw;
       --shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
@@ -49,7 +49,7 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Varela Round', Arial, sans-serif;
-      font-size: clamp(14px,3.6vw,20px);
+      font-size: clamp(14px,2.8vw,18px);
     }
     #wrapper {
       flex: 1;
@@ -117,11 +117,13 @@
       margin: auto;
     }
     @media (min-width: 768px) {
+      :root { --tile: min(8vmin,60px); }
+      body { font-size: 16px; }
       #main { flex-direction: row; }
-      #board { flex: 0 0 360px; margin-right: 2vw; }
+      #board { flex: 0 0 320px; margin-right: 2vw; }
       #historyWrap { flex: 1; }
-      .num-btn { font-size: 1.5rem; }
-      #controls button { font-size: 2rem; }
+      .num-btn { font-size: 1.25rem; }
+      #controls button { font-size: 1.5rem; }
     }
     #board {
       display: flex;

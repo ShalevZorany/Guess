@@ -18,18 +18,18 @@
       --correct: #4caf50;
       --misplaced: #ffeb3b;
       --wrong: #e0e0e0;
-      --tile: min(14vmin,18vw);
+      --tile: min(13vmin,17vw);
       --gap: 2vw;
       --shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     body.dark {
-      --bg: linear-gradient(135deg, #243447 0%, #2e3e55 100%);
+      --bg: linear-gradient(135deg, #11161e 0%, #1d2330 100%);
       --card: #1e1e1ecc;
       --text: #e5e5e5;
       --primary: #64b5f6;
       --border: #555555;
       --borderSoft: #444444;
-      --hover: #2a2a2a;
+      --hover: #333333;
       --correct: #388e3c;
       --misplaced: #fbc02d;
       --wrong: #555555;
@@ -49,7 +49,7 @@
       background: var(--bg);
       color: var(--text);
       font-family: 'Varela Round', Arial, sans-serif;
-      font-size: clamp(14px,3.6vw,20px);
+      font-size: clamp(14px,2.5vw,18px);
     }
     #wrapper {
       flex: 1;
@@ -58,7 +58,7 @@
       margin: 0 auto;
       padding: var(--gap);
       width: 100%;
-      max-width: 960px;
+      max-width: 1200px;
     }
     #topbar {
       display: flex;
@@ -112,16 +112,18 @@
       flex-direction: column;
       gap: var(--gap);
       padding: 0 3vw;
-      max-width: 900px;
+      max-width: 1200px;
       width: 100%;
       margin: auto;
     }
     @media (min-width: 768px) {
+      :root { --tile: min(8vmin,60px); }
+      body { font-size: 16px; }
       #main { flex-direction: row; }
       #board { flex: 0 0 300px; margin-right: 2vw; }
       #historyWrap { flex: 1; }
-      .num-btn { font-size: 1.5rem; }
-      #controls button { font-size: 2rem; }
+      .num-btn { font-size: 1.25rem; }
+      #controls button { font-size: 1.5rem; }
     }
     #board {
       display: flex;
@@ -275,7 +277,7 @@
   </style>
 </head>
 
-<body>
+<body class="dark">
   <div id="wrapper">
   <!-- ====== Top Bar ====== -->
   <div id="topbar">
